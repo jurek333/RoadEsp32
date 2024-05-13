@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "esp_vfs_fat.h": "c",
+        "gpio.h": "c",
+        "*.tcc": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+}
