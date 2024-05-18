@@ -16,10 +16,10 @@ Sensors::~Sensors() {
 }
 
 void Sensors::Init() {
-    _i2c.init();
+    _i2c.Init();
     _kbrd.Init(&_i2c);
     _gps.Init(&_i2c);
-    _power.init();
+    _power.Init();
 }
 
 void Sensors::ReadTimeInLoop() {
