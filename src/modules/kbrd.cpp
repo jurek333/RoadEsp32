@@ -6,7 +6,7 @@
 
 using namespace RouteEsp32::modules;
 
-void Kbrd::init(I2CPort* i2c) {
+void Kbrd::Init(I2CPort* i2c) {
     _i2c = i2c;
     _deviceId = _i2c->AddDevice(I2CExt_ADDR);
     _i2c->WriteDevice(_deviceId, 0x0F);

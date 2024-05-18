@@ -1,6 +1,5 @@
 #include "modules/sdcard.hpp"
 #include <sys/unistd.h>
-#include <sys/stat.h>
 #include "esp_vfs_fat.h"
 #include <dirent.h>
 #include "sdmmc_cmd.h"
@@ -65,54 +64,45 @@ bool SdCard::ListFiles(const std::string &subDirPath, std::vector<std::string> &
     return true;
 }
 
-SdCardFileHandler SdCard::OpenFile(const std::string &path, FileOpenType mode)
+SdCardFileHandler SdCard::OpenFile(const std::string &path, const SdCard::FileOpenType mode)
 {
-    SdCardFileHandler hdr = MaxOpenedFilesAmount;
-    for (int si = 0; si < MaxOpenedFilesAmount; ++si)
-    {
-        if (_files[si] == nullptr)
-        {
-            hdr = si;
-            break;
-        }
-    }
-    if (hdr == MaxOpenedFilesAmount)
+    if (_files.IsFull())
     {
         ESP_LOGE(TAG, "Limit of opened files reached");
-        return 0xFF;
+        return 0xff;
     }
 
-    char m[5] {'r','\0','r','w','\0'};
-    FILE *f = fopen(path.c_str(), m[mode]);
+    char m[5]{'r', '\0', 'r', 'w', '\0'};
+    FILE *f = fopen(path.c_str(), &m[mode]);
     if (f == NULL)
     {
         ESP_LOGE(TAG, "Failed to open file for reading");
         return 0xFF;
     }
-    _files[hdr] = f;
+    auto hdr = _files.Add(f);
     return hdr;
 }
 
 void SdCard::CloseFile(const SdCardFileHandler &fileHandler)
 {
-    auto file = _files[fileHandler];
-    fclose(file);
-    _files[fileHandler] = nullptr;
+    fclose(_files.Get(fileHandler));
+    _files.Release(fileHandler);
 }
 
 std::string&& SdCard::Read(const SdCardFileHandler &fileHandler, const uint16_t chunkSize)
 {
-    char *t = new char[chunkSize+1];
-    if(!fgets(t, chunkSize, _files[fileHandler])) {
-        std::string* str = new std::string(t);
-        delete t;
-        return str;
+    char *t = new char[chunkSize + 1];
+    if (!fgets(t, chunkSize, _files.Get(fileHandler)))
+    {
+        std::string str{t};
+        delete[] t;
+        return std::move(str);
     }
-    delete t;
-    return new std::string();
+    delete[] t;
+    return std::move(std::string());
 }
 
-void SdCard::Write(const SdCardFileHandler &fileHandler, const std::string& value)
+void SdCard::Write(const SdCardFileHandler &fileHandler, const std::string &value)
 {
-    fputs(value.c_str(), _files[fileHandler]);
+    fputs(value.c_str(), _files.Get(fileHandler));
 }

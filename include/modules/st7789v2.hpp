@@ -39,7 +39,7 @@ namespace RouteEsp32::modules
     public:
         ST7789V2(PIN cs, PIN dc, PIN rst, PIN bl, uint16_t screen_H_px, uint16_t screen_W_px);
         ~ST7789V2();
-        void init(Spi *);
+        void Init(Spi *);
 
         inline PIN GetCsPin() { return _cs; }
 

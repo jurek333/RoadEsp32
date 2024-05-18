@@ -7,8 +7,8 @@ namespace RouteEsp32::modules
     {
     public:
         PowerMonitor(adc_channel_t adcChannel);
-        void init();
-        void dispose();
+        void Init();
+        void Dispose();
 
         int ReadRaw();
 

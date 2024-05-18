@@ -1,5 +1,5 @@
 #pragma once
-
+#include "common/system.hpp"
 #include "protocols/i2cPort.hpp"
 
 #define GNS_I2C_ADDR 0x20
@@ -23,7 +23,7 @@ namespace RouteEsp32::modules
     class Gnss
     {
     public:
-        void init(I2CPort *i2c)
+        void Init(I2CPort *i2c)
         {
             _i2c = i2c;
 
@@ -86,7 +86,7 @@ namespace RouteEsp32::modules
         {
             _i2c->WriteDevice(_deviceId, Gnss::Cmds::GnssMode);
             _i2c->WriteDevice(_deviceId, mode);
-            vTaskDelay(50 / portTICK_PERIOD_MS);
+            wait(50);
         }
 
         inline void EnablePower()
@@ -99,7 +99,7 @@ namespace RouteEsp32::modules
         {
             _i2c->WriteDevice(_deviceId, Gnss::Cmds::RgbMode);
             _i2c->WriteDevice(_deviceId, Gnss::Cmds::RgbOn);
-            vTaskDelay(50 / portTICK_PERIOD_MS);
+            wait(50);
         }
 
         inline uint8_t GetAmountOfSatelites()

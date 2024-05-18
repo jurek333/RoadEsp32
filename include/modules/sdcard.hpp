@@ -3,12 +3,15 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <sys/stat.h>
 #include "soc/gpio_num.h"
-
-using namespace std;
+#include "common/SmallBuffer.hpp"
 
 namespace RouteEsp32::modules
 {
+    using namespace std;
+    using namespace RouteEsp32::common;
+
     #define MaxOpenedFilesAmount 4
     typedef uint8_t SdCardFileHandler;
 
@@ -17,21 +20,21 @@ namespace RouteEsp32::modules
     public:
         SdCard(gpio_num_t cs);
         void Init();
+        
+        enum FileOpenType {
+            Open4Read = 0,
+            Open4ReadWrite = 2,
+            Open4Write = 3
+        };
 
         bool ListFiles(const std::string& subDirPath, std::vector<std::string>& list);
-        SdCardFileHandler OpenFile(const std::string &path);
+        SdCardFileHandler OpenFile(const std::string &path, const SdCard::FileOpenType mode);
         void CloseFile(const SdCardFileHandler &fileHandler);
         std::string&& Read(const SdCardFileHandler &fileHandler, const uint16_t chunkSize);
         void Write(const SdCardFileHandler &fileHandler, const std::string& value);
-
-        enum FileOpenType:uint8_t {
-            Read = 0,
-            ReadWrite = 2,
-            Write = 3
-        };
     private:
         gpio_num_t _cs;
         static constexpr std::string _mountPoint { "/sdcard" };
-        File* _files[MaxOpenedFilesAmount] {nullptr};
+        SmallBuffer<FILE*, SdCardFileHandler, 4> _files;
     };
 }

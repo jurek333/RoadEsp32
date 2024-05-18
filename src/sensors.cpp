@@ -17,8 +17,8 @@ Sensors::~Sensors() {
 
 void Sensors::Init() {
     _i2c.init();
-    _kbrd.init(&_i2c);
-    _gps.init(&_i2c);
+    _kbrd.Init(&_i2c);
+    _gps.Init(&_i2c);
     _power.init();
 }
 

@@ -24,8 +24,8 @@ void RouteBook::Setup(SharedData *sharedBuffer)
 {
     this->SetSharedBuffer(sharedBuffer);
 
-    spi.init(PIN_NUM_MOSI, PIN_NUM_MISO, PIN_NUM_CLK, 4096);
-    lcd.init(&spi);
+    spi.Init(PIN_NUM_MOSI, PIN_NUM_MISO, PIN_NUM_CLK, 4096);
+    lcd.Init(&spi);
     lcd.Clean(0x0000);
     sdCard.Init();
 

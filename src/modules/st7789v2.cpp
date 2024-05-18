@@ -37,7 +37,7 @@ void ST7789V2::lcd_spi_pre_transfer_callback(spi_transaction_t *t)
     gpio_set_level(_dc, val);
 }
 
-void ST7789V2::init(Spi *spi)
+void ST7789V2::Init(Spi *spi)
 {
     _spi = spi;
 
@@ -208,7 +208,8 @@ LcdBox ST7789V2::RotatedImages(
     for (int i = 0; i < 4; ++i)
     {
         //ESP_LOGI("glx", "corner %d (%ld,%ld)", i, corners[i].x, corners[i].y);
-        auto p = Rotate(corners[i].Move(-center.x, -center.y), angle);
+        //auto p = Rotate(corners[i].Move(-center.x, -center.y), angle);
+        auto p = corners[i].Move(-center.x, -center.y);        
         //ESP_LOGI("glx", "(%ld,%ld)", p.x, p.y);
         box.StretchByPoint(p.Move(center.x, center.y));
     }

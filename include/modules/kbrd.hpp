@@ -11,7 +11,7 @@ namespace RouteEsp32::modules
     class Kbrd
     {
     public:
-        void init(I2CPort *i2c);
+        void Init(I2CPort *i2c);
         uint8_t ReadKey();
 
     private:

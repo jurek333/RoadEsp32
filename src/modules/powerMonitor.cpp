@@ -10,7 +10,7 @@ PowerMonitor::PowerMonitor(adc_channel_t adcChannel)
     _adcChannel = adcChannel;
 }
 
-void PowerMonitor::init()
+void PowerMonitor::Init()
 {
     adc_oneshot_unit_init_cfg_t config = {
         .unit_id = ADC_UNIT_1,
@@ -23,7 +23,7 @@ void PowerMonitor::init()
     ESP_ERROR_CHECK(adc_oneshot_config_channel(_adcHandle, _adcChannel, &channConfig));
 }
 
-void PowerMonitor::dispose()
+void PowerMonitor::Dispose()
 {
     ESP_ERROR_CHECK(adc_oneshot_del_unit(_adcHandle));
 }
