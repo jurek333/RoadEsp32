@@ -15,5 +15,14 @@ namespace RouteEsp32::data
         ThreadSecureKeyboard SharedKeyState;
         SemaphoreHandle_t Semaphore{0};
         int batteryLvl{0}; // 1700 = 2.9V
+
+        KeysState::Keys GetKeys()
+        {
+            KeysState::Keys key;
+            if(!SharedKeyState.GetKeys(Semaphore, key))
+                return KeysState::Keys::None;
+            
+            return key;
+        }
     };
 }

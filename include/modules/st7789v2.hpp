@@ -39,17 +39,15 @@ namespace RouteEsp32::modules
     public:
         ST7789V2(PIN cs, PIN dc, PIN rst, PIN bl, uint16_t screen_H_px, uint16_t screen_W_px);
         ~ST7789V2();
+
         void Init(Spi *);
-
-        inline PIN GetCsPin() { return _cs; }
-
         void Clean(uint16_t color);
         void Rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
         void Img(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t *img);
         void Image(uint x, uint y, const image_t *img);
         LcdBox RotatedImages(const LcdPoint &position, const LcdPoint &center, double angle, const image_t *img);
         void MonoImage(uint x, uint y, const mono_image_t *img, uint16_t color, uint8_t scale = 1);
-        void PrintLine(uint16_t x, uint16_t y, const char *text, CustFont_t *font, uint16_t fColor, uint16_t bColor);
+        void PrintLine(uint16_t x, uint16_t y, const char *text, const CustFont_t *font, const uint16_t fColor, const uint16_t bColor);
         void Print(uint16_t x, uint16_t y, const char *text, CustFont_t *font, uint16_t fColor, uint16_t bColor);
         void Tick()
         {

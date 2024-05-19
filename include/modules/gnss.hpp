@@ -86,7 +86,7 @@ namespace RouteEsp32::modules
         {
             _i2c->WriteDevice(_deviceId, Gnss::Cmds::GnssMode);
             _i2c->WriteDevice(_deviceId, mode);
-            wait(50);
+            RtosSystem::Wait(50);
         }
 
         inline void EnablePower()
@@ -99,7 +99,7 @@ namespace RouteEsp32::modules
         {
             _i2c->WriteDevice(_deviceId, Gnss::Cmds::RgbMode);
             _i2c->WriteDevice(_deviceId, Gnss::Cmds::RgbOn);
-            wait(50);
+            RtosSystem::Wait(50);
         }
 
         inline uint8_t GetAmountOfSatelites()

@@ -31,14 +31,16 @@ namespace RouteEsp32::data
         {
             ReleasedKeys |= PressedKeys & ~newState;
             PressedKeys = newState;
-            //ESP_LOGI("KbSt", "U 0x%x, %p", PressedKeys, &PressedKeys);
+            
             if (!LockBothPressed)
             {
                 if (3 == (3 & PressedKeys))
                 {
                     ++BothBtnCount;
-                    if (BothBtnCount > BothBtnTresholdCycles)
+                    if (BothBtnCount > BothBtnTresholdCycles){
                         LockBothPressed = true;
+                        ESP_LOGI("KbSt", "U 0x%x 0x%x", PressedKeys, ReleasedKeys);
+                    }
                 }
                 else
                 {

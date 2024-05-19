@@ -348,7 +348,7 @@ uint16_t strLineLen(const char *text)
     return len;
 }
 
-void ST7789V2::PrintLine(uint16_t x, uint16_t y, const char *text, CustFont_t *font, uint16_t fColor, uint16_t bColor){
+void ST7789V2::PrintLine(uint16_t x, uint16_t y, const char *text, const CustFont_t *font, const uint16_t fColor, const uint16_t bColor){
     auto textLen = strLineLen(text);
     auto screenWidth = textLen * font->width;
 

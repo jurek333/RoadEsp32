@@ -48,26 +48,21 @@ i2c_device_id_t I2CPort::AddDevice(uint16_t addr) {
 }
 
 bool I2CPort::ProbeDevice(uint16_t addr) {
-    //ESP_LOGI("I2C", "probing: %x", addr);
     esp_err_t ret = i2c_master_probe(_busHandle, addr, 500);
-    //ESP_LOGI("I2C", "probe res: %x", ret);
     return ret == ESP_OK;
 }
 
 void I2CPort::ReadDeviceByMask(i2c_device_id_t deviceId, uint8_t mask, uint8_t *buffer, size_t buffSize) {
     esp_err_t ret = i2c_master_transmit_receive(_devices.Get(deviceId), &mask, 1, buffer, buffSize, 100);
-    //ESP_LOGI("I2C", "recv res: %x, data: %x", ret, *buffer);
     ESP_ERROR_CHECK(ret);
 }
 
 void I2CPort::ReadDevice(i2c_device_id_t deviceId, uint8_t *buffer, size_t buffSize) {
     esp_err_t ret = i2c_master_receive(_devices.Get(deviceId), buffer, buffSize, 100);
-    //ESP_LOGI("I2C", "recv res: %x, data: %x, addr: %p", ret, *buffer, _devices[deviceId]);
     ESP_ERROR_CHECK(ret);
 }
 
 void I2CPort::WriteDevice(i2c_device_id_t deviceId, uint8_t data) {
     esp_err_t ret = i2c_master_transmit(_devices.Get(deviceId), &data, 1, 100);
-    //ESP_LOGI("I2C", "send ret: %x, data: %x, addr: %p", ret, data, _devices[deviceId]);
     ESP_ERROR_CHECK(ret);
 }

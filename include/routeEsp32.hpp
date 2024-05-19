@@ -1,7 +1,5 @@
 #pragma once
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "data/sharedData.hpp"
 #include "screens/gps.hpp"
 #include "screens/logo.hpp"
@@ -42,6 +40,7 @@ namespace RouteEsp32
             this->_sharedBuffer = buffer;
             this->_menuScreen.SetSharedBuffer(buffer);
             this->_gpsScreen.SetSharedBuffer(buffer);
+            this->_navigationScreen.SetSharedBuffer(buffer);
         }
 
     private:
@@ -55,7 +54,7 @@ namespace RouteEsp32
         Logo _logoScreen{&lcd};
         Menu _menuScreen{&sdCard, &lcd};
         Gps _gpsScreen{&lcd};
-        Navigate _navigationScreen{&lcd};
+        Navigate _navigationScreen{&lcd, &sdCard};
 
         void SwitchScreens(ContextHandler *handl)
         {

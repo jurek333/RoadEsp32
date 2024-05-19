@@ -16,7 +16,7 @@ namespace RouteEsp32::screens
             _lcd = lcd;
         }
         void Init();
-        void Loop();
+        DoneAction Loop();
         void SetSharedBuffer(SharedData *buffer)
         {
             this->_sharedBuffer = buffer;

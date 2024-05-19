@@ -3,7 +3,8 @@
 #include "esp_vfs_fat.h"
 #include <dirent.h>
 #include "sdmmc_cmd.h"
-#include "string.h"
+#include <string.h>
+ #include <errno.h>
 
 using namespace RouteEsp32::modules;
 
@@ -69,15 +70,15 @@ SdCardFileHandler SdCard::OpenFile(const std::string &path, const SdCard::FileOp
     if (_files.IsFull())
     {
         ESP_LOGE(TAG, "Limit of opened files reached");
-        return 0xff;
+        return SdCardFileHandler{0xFF};
     }
-
+    auto fullpath = _mountPoint + path;
     char m[5]{'r', '\0', 'r', 'w', '\0'};
-    FILE *f = fopen(path.c_str(), &m[mode]);
+    FILE *f = fopen(fullpath.c_str(), &m[mode]);
     if (f == NULL)
     {
         ESP_LOGE(TAG, "Failed to open file for reading");
-        return 0xFF;
+        return SdCardFileHandler{0xFF};
     }
     auto hdr = _files.Add(f);
     return hdr;
@@ -89,17 +90,21 @@ void SdCard::CloseFile(const SdCardFileHandler &fileHandler)
     _files.Release(fileHandler);
 }
 
-std::string&& SdCard::Read(const SdCardFileHandler &fileHandler, const uint16_t chunkSize)
+std::string SdCard::Read(const SdCardFileHandler &fileHandler, const uint16_t chunkSize)
 {
+    ESP_LOGE(TAG, "Read file %d", fileHandler);
     char *t = new char[chunkSize + 1];
-    if (!fgets(t, chunkSize, _files.Get(fileHandler)))
+    if (NULL != fgets(t, chunkSize, _files.Get(fileHandler)))
     {
+        ESP_LOGE(TAG, "Read data %s", t);
         std::string str{t};
         delete[] t;
-        return std::move(str);
+        return str;
+    } else {
+        ESP_LOGE(TAG, "Read error: %d", errno);
     }
     delete[] t;
-    return std::move(std::string());
+    return std::string();
 }
 
 void SdCard::Write(const SdCardFileHandler &fileHandler, const std::string &value)

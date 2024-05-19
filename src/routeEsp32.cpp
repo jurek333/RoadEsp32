@@ -36,11 +36,34 @@ void RouteBook::Setup(SharedData *sharedBuffer)
 
 void RouteBook::EventLoop()
 {
-    _currentRoutine->Loop();
-
-    // bool nPressed = _sharedBuffer->SharedKeyState.ReadNextKeyState();
-    if (_currentRoutine->Context() == ContextHandler::ContextType::Intro && _menuScreen.IsReady())
+    auto action = _currentRoutine->Loop();
+    switch (action)
     {
-        SwitchScreens(&_menuScreen);
+    case DoneAction::Selected:
+    {
+        auto path = _menuScreen.GetSelectedPath();
+        if (_navigationScreen.ReadFile(path))
+        {
+            SwitchScreens(&_navigationScreen);
+        }
+    }
+    break;
+    case DoneAction::None:
+    {
+        if (_currentRoutine->Context() == ContextHandler::ContextType::Intro && _menuScreen.IsReady())
+        {
+            SwitchScreens(&_menuScreen);
+        }
+    }
+    break;
+    case DoneAction::Exit:
+    {
+        if (_currentRoutine->Context() == ContextHandler::ContextType::Navigation
+         || _currentRoutine->Context() == ContextHandler::ContextType::Gps)
+        {
+            SwitchScreens(&_menuScreen);
+        }
+    }
+    break;
     }
 }

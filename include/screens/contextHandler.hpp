@@ -2,12 +2,19 @@
 
 namespace RouteEsp32::screens
 {
+    enum DoneAction : uint8_t
+    {
+        None = 0,
+        Selected,
+        Exit
+    };
+
     class ContextHandler
     {
     public:
         virtual ~ContextHandler() {}
         virtual void Init() {}
-        virtual void Loop() {}
+        virtual DoneAction Loop() { return DoneAction::None; }
         enum ContextType : uint8_t
         {
             None = 0,

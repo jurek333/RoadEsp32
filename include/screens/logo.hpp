@@ -17,11 +17,13 @@ namespace RouteEsp32::screens
         {
             _lcd->Clean(0x0000);
         }
-        void Loop()
+        DoneAction Loop()
         {
             vTaskDelay(50 / portTICK_PERIOD_MS);
             _lcd->Tick();
             _lcd->MonoImage(50, 82, &Images::Logos::logo, RouteEsp32::modules::mapColor(0xD1332B), 14);
+
+            return DoneAction::None;
         }
         ContextHandler::ContextType Context() { return ContextHandler::ContextType::Intro; }
 

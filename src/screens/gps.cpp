@@ -9,7 +9,8 @@ void Gps::Init()
     _lcd->Rect(55, 45, 130, 1, 0xFFFF);
 }
 
-void Gps::Loop()
+DoneAction Gps::Loop()
 {
     vTaskDelay(100 / portTICK_PERIOD_MS);
+    return DoneAction::None;
 }

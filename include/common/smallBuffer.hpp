@@ -7,7 +7,6 @@
 namespace RouteEsp32::common
 {
     template <typename T, typename H, size_t L = 8>
-    // requires std::is_base_of<uint8_t, H>
     class SmallBuffer
     {
         T _buffor[L];
@@ -30,7 +29,7 @@ namespace RouteEsp32::common
                     return index;
                 }
             }
-            return L;
+            return 0xFF;
         }
         T Get(H hdr)
         {
@@ -48,7 +47,7 @@ namespace RouteEsp32::common
                 if (_occupied[index])
                     return index;
             }
-            return L;
+            return 0xFF;
         }
         bool IsTheEnd(H val)
         {
