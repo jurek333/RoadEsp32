@@ -14,7 +14,7 @@ namespace RouteEsp32::screens
     public:
         static void Alert(ST7789V2 *lcd, SharedData *kbrd, const std::string &msg)
         {
-            lcd->Rect(10, 50, 230, 200, 0x1011);
+            lcd->Rect(40, 90, 160, 140, 0x10c1);
             lcd->Print(20, 100, msg.c_str(), &Font16, 0x0110, 0x1011);
 
             auto key = kbrd->GetKeys();

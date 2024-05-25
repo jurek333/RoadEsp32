@@ -4,7 +4,7 @@
 #include <dirent.h>
 #include "sdmmc_cmd.h"
 #include <string.h>
- #include <errno.h>
+#include <errno.h>
 
 using namespace RouteEsp32::modules;
 
@@ -65,7 +65,7 @@ bool SdCard::ListFiles(const std::string &subDirPath, std::vector<std::string> &
     return true;
 }
 
-SdCardFileHandler SdCard::OpenFile(const std::string &path, const SdCard::FileOpenType mode)
+SdCardFileHandler SdCard::OpenFile(const std::string &path, const SdCard::FileOpenMode mode)
 {
     if (_files.IsFull())
     {
@@ -90,24 +90,15 @@ void SdCard::CloseFile(const SdCardFileHandler &fileHandler)
     _files.Release(fileHandler);
 }
 
-std::string SdCard::Read(const SdCardFileHandler &fileHandler, const uint16_t chunkSize)
+bool SdCard::Read(const SdCardFileHandler &fileHandler, char *buff, const uint16_t buffSize)
 {
-    ESP_LOGE(TAG, "Read file %d", fileHandler);
-    char *t = new char[chunkSize + 1];
-    if (NULL != fgets(t, chunkSize, _files.Get(fileHandler)))
+    //ESP_LOGE(TAG, "Read file %d", fileHandler);
+    if (NULL == fgets(buff, buffSize, _files.Get(fileHandler)))
     {
-        ESP_LOGE(TAG, "Read data %s", t);
-        std::string str{t};
-        delete[] t;
-        return str;
-    } else {
-        ESP_LOGE(TAG, "Read error: %d", errno);
+        //ESP_LOGE(TAG, "Read error: %d", errno);
+        return false;
     }
-    delete[] t;
-    return std::string();
+    return true;
 }
 
-void SdCard::Write(const SdCardFileHandler &fileHandler, const std::string &value)
-{
-    fputs(value.c_str(), _files.Get(fileHandler));
-}
+

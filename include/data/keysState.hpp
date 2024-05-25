@@ -2,8 +2,6 @@
 #include <cstdint>
 #include <cstddef>
 
-#include "esp_log.h"
-
 #define NextKeyMask 0b00000010
 #define PrevKeyMask 0b00000001
 
@@ -39,7 +37,6 @@ namespace RouteEsp32::data
                     ++BothBtnCount;
                     if (BothBtnCount > BothBtnTresholdCycles){
                         LockBothPressed = true;
-                        ESP_LOGI("KbSt", "U 0x%x 0x%x", PressedKeys, ReleasedKeys);
                     }
                 }
                 else

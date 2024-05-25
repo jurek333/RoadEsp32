@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include "soc/gpio_num.h"
 #include "common/SmallBuffer.hpp"
+#include "modules/disk.hpp"
 
 namespace RouteEsp32::modules
 {
@@ -14,34 +15,37 @@ namespace RouteEsp32::modules
 
 #define MaxOpenedFilesAmount 4
 
-    typedef uint8_t SdCardFileHandler;
     class FileHandlerExtnsions
     {
     public:
-        static bool IsEmpty(const SdCardFileHandler &handler) 
-        { return handler == 0xFF; }
-        static void ClearHandler(SdCardFileHandler &handler) 
-        { handler = 0xFF; }
+        static bool IsEmpty(const SdCardFileHandler &handler)
+        {
+            return handler == 0xFF;
+        }
+        static void ClearHandler(SdCardFileHandler &handler)
+        {
+            handler = 0xFF;
+        }
     };
 
-    class SdCard
+    class SdCard : Disk
     {
     public:
         SdCard(gpio_num_t cs);
         void Init();
 
-        enum FileOpenType
-        {
-            Open4Read = 0,
-            Open4ReadWrite = 2,
-            Open4Write = 3
-        };
-
         bool ListFiles(const std::string &subDirPath, std::vector<std::string> &list);
-        SdCardFileHandler OpenFile(const std::string &path, const SdCard::FileOpenType mode);
+        SdCardFileHandler OpenFile(const std::string &path, const SdCard::FileOpenMode mode);
         void CloseFile(const SdCardFileHandler &fileHandler);
-        std::string Read(const SdCardFileHandler &fileHandler, const uint16_t chunkSize);
-        void Write(const SdCardFileHandler &fileHandler, const std::string &value);
+        bool Read(const SdCardFileHandler &fileHandler, char *buff, const uint16_t buffSize);
+        void Write(const SdCardFileHandler &fileHandler, const std::string &value)
+        {
+            fputs(value.c_str(), _files.Get(fileHandler));
+        }
+        void Reset(const SdCardFileHandler &fileHandler)
+        {
+            rewind(_files.Get(fileHandler));
+        }
 
     private:
         gpio_num_t _cs;

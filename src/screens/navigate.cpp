@@ -50,12 +50,9 @@ void Navigate::ShowSatelites()
 
 bool Navigate::ReadSection()
 {
-    auto txt = _sd->Read(_navFileHandler, 18);
-    if (txt.length() == 0)
-    {
-        return false;
-    }
-    _lcd->Print(0, 120, txt.c_str(), &Font16, 0x0110, 0x0000);
+    char txt[20];
+    _sd->Read(_navFileHandler, txt, 18);
+    _lcd->Print(0, 120, txt,  &Font16, 0x0110, 0x0000);
     return true;
 }
 

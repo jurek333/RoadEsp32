@@ -4,7 +4,8 @@
         "gpio.h": "c",
         "*.tcc": "cpp",
         "cstdint": "cpp",
-        "type_traits": "cpp"
+        "type_traits": "cpp",
+        "memory_resource": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

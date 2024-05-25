@@ -33,7 +33,7 @@ namespace RouteEsp32::screens
         bool ReadFile(const std::string &path)
         {
             ESP_LOGI("nav", "Open file: %s", path.c_str());
-            _navFileHandler = _sd->OpenFile(path, SdCard::FileOpenType::Open4Read);
+            _navFileHandler = _sd->OpenFile(path, SdCard::FileOpenMode::Open4Read);
             ESP_LOGI("nav", "Got filehandler %d", _navFileHandler);
             return !FileHandlerExtnsions::IsEmpty(_navFileHandler);
         }

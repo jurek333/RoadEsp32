@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <cstddef>
 #include "data/keysState.hpp"
-#include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #include <freertos/projdefs.h>
 
