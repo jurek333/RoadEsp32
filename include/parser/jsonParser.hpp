@@ -3,17 +3,22 @@
 #include "modules/disk.hpp"
 #include "parser/parserStateMachine.hpp"
 #include "common/stringExtensions.hpp"
+#include <queue>
+
+#ifndef JSONPARSER_BUFF_SIZE
+#define JSONPARSER_BUFF_SIZE 24     
+
+// 1024
+#endif
 
 using namespace RouteEsp32::modules;
 
 namespace RouteEsp32::parser
 {
-#define JSONPARSER_BUFF_SIZE 1024
-
-    class RouteJsonParser
+    class JsonParser
     {
     public:
-        RouteJsonParser(Disk *sd, SdCardFileHandler file)
+        JsonParser(Disk *sd, SdCardFileHandler file)
         {
             _buffSize = 0;
             _readFileOffset = 0;
@@ -21,6 +26,8 @@ namespace RouteEsp32::parser
             _sd = sd;
             _file = file;
         }
+        inline bool IsReadingObject() { return _stateMachine.State() == JsonParserStates::Object; }
+
         bool StartReadingObject(std::string xpath)
         {
             Reset();
@@ -42,8 +49,13 @@ namespace RouteEsp32::parser
             std::string val;
             ParserStateMachine::StateOperation stateStatus;
 
-            while (Probe() != type)
-                ;
+            while (_stateMachine.State() != type)
+                ReadNextChar(stateStatus);
+
+            if(type == JsonParserStates::ValueNumber) {
+                c[0] = _buff[_parseIndex-1];
+                val.append(c);
+            }
             while (_stateMachine.State() == type)
             {
                 c[0] = ReadNextChar(stateStatus);
@@ -65,17 +77,59 @@ namespace RouteEsp32::parser
         float ReadFloatValue()
         {
             auto val = ReadField(JsonParserStates::ValueNumber);
-            return 0.0f;
+            return std::stof(val);
+        }
+        double ReadDoubleValue()
+        {
+            auto val = ReadField(JsonParserStates::ValueNumber);
+            return std::stod(val);
         }
         int ReadIntValue()
         {
             auto val = ReadField(JsonParserStates::ValueNumber);
-            return 0;
+            return std::stoi(val);
         }
-        bool IsReadingObject() { return _stateMachine.State() == JsonParserStates::Object; }
-        bool IsReadingArray() { return _stateMachine.State() == JsonParserStates::Array; }
-        bool IsReadingStringValue() { return _stateMachine.State() == JsonParserStates::ValueString; }
-        bool IsReadingNumberValue() { return _stateMachine.State() == JsonParserStates::ValueNumber; }
+
+        bool GoToNext(const JsonParserStates& state)
+        {
+            char c;
+            ParserStateMachine::StateOperation status;
+            while (_stateMachine.State() != state)
+            {
+                c = ReadNextChar(status);
+                if (c == '\0')
+                    return false;
+            }
+            return true;
+        }
+
+        void JumpOverCurrentState()
+        {
+            ParserStateMachine::StateOperation operation;
+
+            _stateMachine.SetBookmark();
+            ReadNextChar(operation);
+
+            while (operation != ParserStateMachine::StateOperation::PopedWithBookmark)
+            {
+                ReadNextChar(operation);
+            }
+        }
+
+        JsonParserStates Probe()
+        {
+            ParserStateMachine::StateOperation status;
+            char c = ReadNextChar(status);
+            if (c == '\0')
+                return JsonParserStates::End;
+            return _stateMachine.State();
+        }
+
+        inline const JsonParserStates &CurrentElement() noexcept { return _stateMachine.State(); }
+        inline const bool StillInProperty() noexcept { 
+            return _stateMachine.State() == JsonParserStates::Property
+                || _stateMachine.State() == JsonParserStates::PropertyValue
+                || _stateMachine.State() == JsonParserStates::PropertyName; }
 
     private:
         Disk *_sd;
@@ -124,13 +178,6 @@ namespace RouteEsp32::parser
             return c;
         }
 
-        JsonParserStates Probe()
-        {
-            ParserStateMachine::StateOperation status;
-            char c = ReadNextChar(status);
-            return _stateMachine.State();
-        }
-
         size_t GoToSection(const std::string &sectionName)
         {
             char c[2]{' ', '\0'};
@@ -140,17 +187,16 @@ namespace RouteEsp32::parser
             {
                 c[0] = ReadNextChar(stateStatus);
 
-                if (stateStatus == ParserStateMachine::StateOperation::Error || stateStatus == ParserStateMachine::StateOperation::ChangedAndCrossTheBookmark)
+                if (stateStatus == ParserStateMachine::StateOperation::Error || stateStatus == ParserStateMachine::StateOperation::PopedWithBookmark)
                     return -1;
                 else if (stateStatus == ParserStateMachine::StateOperation::Unchanged && _stateMachine.State() == JsonParserStates::PropertyName)
                     name.append(c);
-                else if (stateStatus == ParserStateMachine::StateOperation::Changed && _stateMachine.State() == JsonParserStates::PropertyName)
+                else if (stateStatus == ParserStateMachine::StateOperation::Pushed && _stateMachine.State() == JsonParserStates::PropertyName)
                     name.clear();
-                else if (stateStatus == ParserStateMachine::StateOperation::Changed && _stateMachine.State() == JsonParserStates::PropertyValue)
+                else if (stateStatus == ParserStateMachine::StateOperation::Pushed && _stateMachine.State() == JsonParserStates::PropertyValue)
                 {
                     if (sectionName == name)
                     {
-                        _stateMachine.SetBookmark();
                         return _parseIndex + _readFileOffset;
                     }
                 }

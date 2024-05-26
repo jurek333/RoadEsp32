@@ -36,13 +36,14 @@ namespace RouteEsp32::parser
             _stateModifier = JsonParserStateModifiers::none;
             _state.push(JsonParserStates::Empty);
         }
-        const JsonParserStates& State() { return _state.top(); }
+        const JsonParserStates &State() { return _state.top(); }
 
         enum StateOperation
         {
             Unchanged,
-            Changed,
-            ChangedAndCrossTheBookmark,
+            Pushed,
+            Poped,
+            PopedWithBookmark,
             Error
         };
 
@@ -71,10 +72,15 @@ namespace RouteEsp32::parser
             &ParserStateMachine::WhenArray,
             &ParserStateMachine::WhenEnd};
 
-        bool Pop()
+        StateOperation Pop()
         {
             _state.pop();
-            return _bookmark == -1 || _state.size() >= _bookmark;
+
+            bool untouchedBookmark = _bookmark == -1 || _state.size() >= _bookmark;
+            if (untouchedBookmark)
+                return StateOperation::Poped;
+
+            return StateOperation::PopedWithBookmark;
         }
 
         bool IsEscapedChar(char c)
@@ -105,80 +111,19 @@ namespace RouteEsp32::parser
             default:
                 return StateOperation::Unchanged;
             }
-            return StateOperation::Changed;
+            return StateOperation::Pushed;
         }
         StateOperation WhenObject(char c)
         {
             if (c == '}')
             {
-                return Pop()
-                           ? StateOperation::Changed
-                           : StateOperation::ChangedAndCrossTheBookmark;
+                return Pop();
             }
             if (c == '"')
             {
                 _state.push(JsonParserStates::Property);
                 _state.push(JsonParserStates::PropertyName);
-                return StateOperation::Changed;
-            }
-            return StateOperation::Unchanged;
-        }
-        StateOperation WhenArray(char c)
-        {
-            if (c > '0' && c < '9')
-            {
-                _state.push(JsonParserStates::ValueNumber);
-                return StateOperation::Changed;
-            }
-            switch (c)
-            {
-            case '{':
-                _state.push(JsonParserStates::Object);
-                break;
-            case '"':
-                _state.push(JsonParserStates::ValueString);
-                break;
-            case ']':
-                return Pop()
-                           ? StateOperation::Changed
-                           : StateOperation::ChangedAndCrossTheBookmark;
-            case '-':
-                _state.push(JsonParserStates::ValueNumber);
-                break;
-            default:
-                return StateOperation::Unchanged;
-            }
-            return StateOperation::Changed;
-        }
-        StateOperation WhenNumber(char c)
-        {
-            auto changeWithoutBookmark = true;
-            switch (c)
-            {
-            case ']':
-                changeWithoutBookmark = Pop();
-                if (_state.top() == JsonParserStates::Array)
-                    changeWithoutBookmark |= Pop();
-                break;
-            case ',':
-                changeWithoutBookmark = Pop();
-                if (_state.top() == JsonParserStates::PropertyValue)
-                    changeWithoutBookmark |= Pop();
-                changeWithoutBookmark |= Pop();
-                break;
-            default:
-                return StateOperation::Unchanged;
-            }
-            return changeWithoutBookmark
-                       ? StateOperation::Changed
-                       : StateOperation::ChangedAndCrossTheBookmark;
-        }
-        StateOperation WhenString(char c)
-        {
-            if (c == '"')
-            {
-                _state.pop();
-                return StateOperation::Changed;
+                return StateOperation::Pushed;
             }
             return StateOperation::Unchanged;
         }
@@ -186,8 +131,7 @@ namespace RouteEsp32::parser
         {
             if (c == '"')
             {
-                _state.pop();
-                return StateOperation::Changed;
+                return Pop();
             }
             return StateOperation::Unchanged;
         }
@@ -196,13 +140,11 @@ namespace RouteEsp32::parser
             if (c == ':')
             {
                 _state.push(JsonParserStates::PropertyValue);
-                return StateOperation::Changed;
+                return StateOperation::Pushed;
             }
             if (c == ',')
             {
-                return Pop()
-                           ? StateOperation::Changed
-                           : StateOperation::ChangedAndCrossTheBookmark;
+                return Pop();
             }
             return StateOperation::Unchanged;
         }
@@ -210,10 +152,10 @@ namespace RouteEsp32::parser
         {
             auto changeWithoutBookmark = false;
 
-            if (c == '-' || (c > '0' && c < '9'))
+            if (c == '-' || (c >= '0' && c <= '9'))
             {
                 _state.push(JsonParserStates::ValueNumber);
-                return StateOperation::Changed;
+                return StateOperation::Pushed;
             }
             switch (c)
             {
@@ -226,14 +168,92 @@ namespace RouteEsp32::parser
             case '{':
                 _state.push(JsonParserStates::Object);
                 break;
+            case ']':
+            case '}':
+                changeWithoutBookmark = (StateOperation::Poped == Pop());
+                changeWithoutBookmark &= (StateOperation::Poped == Pop());
+                changeWithoutBookmark &= (StateOperation::Poped == Pop());
+                return changeWithoutBookmark ? StateOperation::Poped : StateOperation::PopedWithBookmark;
             case ',':
-                changeWithoutBookmark = Pop();
-                changeWithoutBookmark |= Pop();
-                return changeWithoutBookmark ? StateOperation::Changed : StateOperation::ChangedAndCrossTheBookmark;
+                changeWithoutBookmark = (StateOperation::Poped == Pop());
+                changeWithoutBookmark &= (StateOperation::Poped == Pop());
+                return changeWithoutBookmark ? StateOperation::Poped : StateOperation::PopedWithBookmark;
             default:
                 return StateOperation::Unchanged;
             }
-            return StateOperation::Changed;
+            return StateOperation::Pushed;
+        }
+        StateOperation WhenArray(char c)
+        {
+            if (c > '0' && c < '9')
+            {
+                _state.push(JsonParserStates::ValueNumber);
+                return StateOperation::Pushed;
+            }
+            switch (c)
+            {
+            case '{':
+                _state.push(JsonParserStates::Object);
+                break;
+            case '"':
+                _state.push(JsonParserStates::ValueString);
+                break;
+            case ']':
+                return Pop();
+            case '-':
+                _state.push(JsonParserStates::ValueNumber);
+                break;
+            default:
+                return StateOperation::Unchanged;
+            }
+            return StateOperation::Pushed;
+        }
+        StateOperation WhenNumber(char c)
+        {
+            auto changeWithoutBookmark = true;
+            switch (c)
+            {
+            case '}':
+                changeWithoutBookmark = (Pop() == StateOperation::Poped);
+                changeWithoutBookmark &= (Pop() == StateOperation::Poped);
+                changeWithoutBookmark &= (Pop() == StateOperation::Poped);
+                if (_state.top() == JsonParserStates::Object)
+                    changeWithoutBookmark &= (Pop() == StateOperation::Poped);
+                else
+                    return StateOperation::Error;
+                break;
+            case ']':
+                changeWithoutBookmark = (Pop() == StateOperation::Poped);
+                if (_state.top() == JsonParserStates::Array)
+                    changeWithoutBookmark &= (Pop() == StateOperation::Poped);
+                else
+                    return StateOperation::Error;
+                if (_state.top() == JsonParserStates::PropertyValue)
+                {
+                    changeWithoutBookmark &= (Pop() == StateOperation::Poped);
+                    changeWithoutBookmark &= (Pop() == StateOperation::Poped);
+                }
+                break;
+            case ',':
+                changeWithoutBookmark = (Pop() == StateOperation::Poped);
+                if (_state.top() == JsonParserStates::PropertyValue)
+                    changeWithoutBookmark &= (Pop() == StateOperation::Poped);
+                changeWithoutBookmark &= (Pop() == StateOperation::Poped);
+                break;
+            default:
+                return StateOperation::Unchanged;
+            }
+            return changeWithoutBookmark
+                       ? StateOperation::Poped
+                       : StateOperation::PopedWithBookmark;
+        }
+        StateOperation WhenString(char c)
+        {
+            if (c == '"')
+            {
+                return Pop();
+            }
+            return StateOperation::Unchanged;
         }
         StateOperation WhenEnd(char c)
         {

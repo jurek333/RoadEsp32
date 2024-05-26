@@ -1,6 +1,7 @@
 #include "unity.h"
 #include "keyStateTests.hpp"
-#include "routeJsonParserTests.hpp"
+#include "jsonParserTests.hpp"
+#include "readRouteTests.hpp"
 
 void setUp(void)
 {
@@ -18,6 +19,7 @@ int runUnityTests(void)
   
   KbrdTests();
   JsonParserTests();
+  RouteReaderTests();
   
   return UNITY_END();
 }

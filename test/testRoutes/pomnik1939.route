@@ -1,0 +1,175 @@
+{
+	"header":{
+		"name":"Pomnik Pod Wyszogrodem"
+	},
+	"road":{
+		"ver":1,
+		"directions":[
+			{
+				"type": "crossing",
+				"dir":"left"
+			},
+			{
+				"type": "crossing",
+				"dir":"right"
+			},
+			{
+				"type": "round",
+				"exit": 3
+			},
+			{
+				"type": "right_join",
+				"roadName": "Sochaczewska",
+				"exit": 1
+			},
+			{
+				"type":"round",
+				"exit":2,
+				"points":[
+					{
+						"type":"shrine",
+						"position": 3
+					}]
+			},
+			{
+				"type":"round",
+				"exit":2,
+				"points":[
+					{
+						"type":"shrine",
+						"position": 3
+					}]
+			},
+			{
+				"type":"round",
+				"exit":1,
+			},
+			{
+				"type":"left_join",
+				"dir" :"ahead",
+				"roadName": "Umiastowska"
+			},
+			{
+				"type":"left_join",
+				"dir":"left",
+				"roadName":"Nowowiejska",
+				"distance":0.6
+			},
+			{
+				"type":"round",
+				"exit":"2",
+				"roadName":"Nowowiejska"
+			},
+			{
+				"type":"left_join",
+				"dir":"left"
+			},
+			{
+				"distance":3.7
+				"type":"t_join",
+				"dir":"right"
+			},
+			{
+				"distance":1.7,
+				"type":"crossing",
+				"dir":"left",
+				"points":[
+				{
+					"type":"church",
+					"position":1
+				}]
+			},
+			{
+				"type":"town",
+				"name":"Kampinos"
+			},
+			{
+				"type":"town",
+				"name":"Łazy"
+			},
+			{
+				"type":"right_join",
+				"dir":"right",
+				"dirSign":"Strojec"
+			},
+			{
+				"type":"town",
+				"name":"Strojec"
+			},
+			{
+				"type":"left_join",
+				"dir":"ahead",
+				"gps":{
+					"lat":52.273785,
+					"lon":20.337437
+				}
+			},
+			{
+				"type":"crossing",
+				"dir":"right",
+				"gps":{
+					"lat":52.286968,
+					"lon":20.306909
+				}
+			},
+			{
+				"distance":2.4,
+				"type":"right_join",
+				"dir":"right",
+				"name":"Andrzejów",
+				"dirSign":"Famułki Brochowskie"
+			},
+			{
+				"distance":2.2,
+				"type":"left_join",
+				"dir":"left",
+				"town":"Famułki Brochowskie",
+				"gps":{
+					"lat":52.310740,
+					"lon":20.354441
+				}
+			},
+			{
+				"distance":3.2,
+				"type":"crossing",
+				"dir":"left",
+				"points":[{
+					"type":"cross",
+					"position":1
+				}]
+			},
+			{
+				"type":"town",
+				"name":"Miszory"
+			},
+			{
+				"distance":4.1,
+				"type":"t_join",
+				"dir":"right"
+			},
+			{
+				"type":"bridge",
+				"name":"Kanał Kampinowski"
+			},{
+				"type":"crossing",
+				"dir":"ahead"
+			},
+			{
+				"distance":0.4,
+				"type":"t_join",
+				"dir":"left"
+			},{
+				"distance":0.9,
+				"type":"crossing",
+				"dir":"right"
+			},{
+				"distance":0.6,
+				"type":"end",
+				"gps":{
+					"lat":52.383881,
+					"lon":20.295997
+				}
+			}
+		]
+	}
+}

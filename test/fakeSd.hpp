@@ -6,8 +6,6 @@
 
 using namespace RouteEsp32::modules;
 
-#define JSONPARSER_BUFF_SIZE 24
-
 class MockedSdCard : public Disk
 {
 private:
@@ -15,7 +13,7 @@ private:
     std::string _json;
 
 public:
-    MockedSdCard(std::string json)
+    MockedSdCard(const std::string& json)
         : _json(json)
     {
     }
