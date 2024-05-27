@@ -6,9 +6,7 @@
 #include <queue>
 
 #ifndef JSONPARSER_BUFF_SIZE
-#define JSONPARSER_BUFF_SIZE 24     
-
-// 1024
+#define JSONPARSER_BUFF_SIZE 512
 #endif
 
 using namespace RouteEsp32::modules;
@@ -126,7 +124,7 @@ namespace RouteEsp32::parser
         }
 
         inline const JsonParserStates &CurrentElement() noexcept { return _stateMachine.State(); }
-        inline const bool StillInProperty() noexcept { 
+        inline bool StillInProperty() noexcept { 
             return _stateMachine.State() == JsonParserStates::Property
                 || _stateMachine.State() == JsonParserStates::PropertyValue
                 || _stateMachine.State() == JsonParserStates::PropertyName; }

@@ -1,8 +1,6 @@
 #pragma once
-
+#include "common/system.hpp"
 #include "modules/st7789v2.hpp"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "screens/contextHandler.hpp"
 
 namespace RouteEsp32::screens
@@ -19,7 +17,7 @@ namespace RouteEsp32::screens
         }
         DoneAction Loop()
         {
-            vTaskDelay(50 / portTICK_PERIOD_MS);
+            RtosSystem::Wait(50);
             _lcd->Tick();
             _lcd->MonoImage(50, 82, &Images::Logos::logo, RouteEsp32::modules::mapColor(0xD1332B), 14);
 

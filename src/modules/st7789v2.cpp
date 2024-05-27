@@ -5,8 +5,10 @@
 #include <string.h>
 #include <math.h>
 
+#ifdef BUILD_ENV_ESP
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#endif
 
 #include "fonts/fonts.hpp"
 #include "esp_log.h"

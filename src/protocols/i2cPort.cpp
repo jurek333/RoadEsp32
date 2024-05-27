@@ -1,3 +1,7 @@
+#ifdef BUILD_ENV_ESP
+#include "freertos/FreeRTOS.h"
+#endif
+
 #include "protocols/i2cPort.hpp"
 
 using namespace RouteEsp32::protocols;

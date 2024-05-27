@@ -1,35 +1,41 @@
+#include "common/system.hpp"
 #include "sensors.hpp"
+#include <math.h>
 
 using namespace RouteEsp32;
 using namespace RouteEsp32::data;
 using namespace RouteEsp32::modules;
 
-Sensors::Sensors(SharedData *sharedBuffer) {
+Sensors::Sensors(SharedData *sharedBuffer)
+{
     _buffer = sharedBuffer;
     sensorMethodInd = 0;
     _buffer->GpsSharedData.DateTime.hour = 24;
 }
 
-Sensors::~Sensors() {
+Sensors::~Sensors()
+{
     _i2c.RemoveDevices();
     _i2c.CloseBus();
 }
 
-void Sensors::Init() {
+void Sensors::Init()
+{
     _i2c.Init();
     _kbrd.Init(&_i2c);
     _gps.Init(&_i2c);
     _power.Init();
 }
 
-void Sensors::ReadTimeInLoop() {
+void Sensors::ReadTimeInLoop()
+{
     auto time = _gps.GetUTC();
     auto oldHour = _buffer->GpsSharedData.DateTime.hour;
-    
+
     _buffer->GpsSharedData.DateTime.hour = time.hour;
     _buffer->GpsSharedData.DateTime.minute = time.minute;
     _buffer->GpsSharedData.DateTime.second = time.second;
-    if(oldHour <= time.hour)
+    if (oldHour <= time.hour)
         return;
     auto day = _gps.GetDate();
     _buffer->GpsSharedData.DateTime.year = day.year;
@@ -37,14 +43,16 @@ void Sensors::ReadTimeInLoop() {
     _buffer->GpsSharedData.DateTime.date = day.date;
 }
 
-void Sensors::ReadMovementInLoop() {
+void Sensors::ReadMovementInLoop()
+{
     auto s = _gps.getSpeed();
     auto dir = _gps.GetCourse();
     _buffer->GpsSharedData.Speed = s;
     _buffer->GpsSharedData.Course = dir;
 }
 
-void Sensors::ReadPositionInLoop() {
+void Sensors::ReadPositionInLoop()
+{
     auto lon = _gps.GetLon();
     auto lat = _gps.GetLat();
     auto a = _gps.GetAlt();
@@ -54,17 +62,22 @@ void Sensors::ReadPositionInLoop() {
     _buffer->GpsSharedData.Coordinates.UpdateLongitude(lon);
 }
 
-void Sensors::ReadGpsStatusInLoop(){
+void Sensors::ReadGpsStatusInLoop()
+{
     auto n = _gps.GetAmountOfSatelites();
     _buffer->GpsSharedData.Satelites = n;
 }
 
-void Sensors::ReadPowerLvl() {
+void Sensors::ReadPowerLvl()
+{
+    constexpr int max = 2350;
+    constexpr int min = 1750;
     auto val = _power.ReadRaw();
-    _buffer->batteryLvl = val;
+    _buffer->batteryLvl = std::max(0, ((val-min)*100)/(max-min));
 }
 
-void Sensors::Loop() {
+void Sensors::Loop()
+{
     (this->*gpsMethods[sensorMethodInd])();
     ++sensorMethodInd;
     sensorMethodInd %= Sensors::subMethodsCount;
@@ -73,5 +86,5 @@ void Sensors::Loop() {
     auto keys = _kbrd.ReadKey();
     _buffer->SharedKeyState.SecUpdateState(keys, _buffer->Semaphore);
 
-    vTaskDelay(100/portTICK_PERIOD_MS);
+    RtosSystem::Wait(100);
 }

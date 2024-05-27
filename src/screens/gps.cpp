@@ -1,6 +1,8 @@
+#include "common/system.hpp"
 #include "screens/gps.hpp"
 
 using namespace RouteEsp32::screens;
+using namespace RouteEsp32::common;
 
 void Gps::Init()
 {
@@ -11,6 +13,6 @@ void Gps::Init()
 
 DoneAction Gps::Loop()
 {
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+    RtosSystem::Wait(100);
     return DoneAction::None;
 }

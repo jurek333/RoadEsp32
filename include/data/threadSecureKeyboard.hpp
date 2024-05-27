@@ -4,6 +4,7 @@
 #include "data/keysState.hpp"
 #include <freertos/semphr.h>
 #include <freertos/projdefs.h>
+#include <freertos/portmacro.h>
 
 namespace RouteEsp32::data
 {
@@ -26,6 +27,7 @@ namespace RouteEsp32::data
             }
             return true;
         }
+
         bool GetKeys(SemaphoreHandle_t semaphore, KeysState::Keys &key)
         {
             if (semaphore == NULL)

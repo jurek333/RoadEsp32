@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
-#include "modules/st7789v2.hpp"
 #include "common/system.hpp"
+#include "modules/st7789v2.hpp"
 #include "data/sharedData.hpp"
 
 namespace RouteEsp32::screens

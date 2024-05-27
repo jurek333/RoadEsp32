@@ -28,14 +28,14 @@ namespace RouteEsp32::modules
         }
     };
 
-    class SdCard : Disk
+    class SdCard : public Disk
     {
     public:
         SdCard(gpio_num_t cs);
         void Init();
 
         bool ListFiles(const std::string &subDirPath, std::vector<std::string> &list);
-        SdCardFileHandler OpenFile(const std::string &path, const SdCard::FileOpenMode mode);
+        SdCardFileHandler OpenFile(const std::string &path, const FileOpenMode mode);
         void CloseFile(const SdCardFileHandler &fileHandler);
         bool Read(const SdCardFileHandler &fileHandler, char *buff, const uint16_t buffSize);
         void Write(const SdCardFileHandler &fileHandler, const std::string &value)

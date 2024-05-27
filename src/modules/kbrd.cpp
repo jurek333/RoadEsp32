@@ -1,5 +1,6 @@
-#include "modules/kbrd.hpp"
+#include "freertos/FreeRTOS.h"
 
+#include "modules/kbrd.hpp"
 #include <esp_system.h>
 #include <driver/gpio.h>
 #include <esp_log.h>

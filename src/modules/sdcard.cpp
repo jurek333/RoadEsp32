@@ -65,7 +65,7 @@ bool SdCard::ListFiles(const std::string &subDirPath, std::vector<std::string> &
     return true;
 }
 
-SdCardFileHandler SdCard::OpenFile(const std::string &path, const SdCard::FileOpenMode mode)
+SdCardFileHandler SdCard::OpenFile(const std::string &path, const FileOpenMode mode)
 {
     if (_files.IsFull())
     {
