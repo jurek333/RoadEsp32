@@ -30,7 +30,7 @@ namespace RouteEsp32
         I2CPort _i2c;
         Kbrd _kbrd;
         Gnss _gps;
-        PowerMonitor _power{(adc_channel_t)ADC1_GPIO3_CHANNEL};
+        PowerMonitor _power{(adc_channel_t)ADC1_GPIO1_CHANNEL};
 
         void ReadTimeInLoop();
         void ReadPositionInLoop();
