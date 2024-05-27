@@ -47,6 +47,7 @@ void RouteBook::EventLoop()
         }
     }
     break;
+    case DoneAction::Changed:
     case DoneAction::None:
     {
         if (_currentRoutine->Context() == ContextHandler::ContextType::Intro && _menuScreen.IsReady())

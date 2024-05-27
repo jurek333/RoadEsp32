@@ -6,7 +6,8 @@ namespace RouteEsp32::screens
     {
         None = 0,
         Selected,
-        Exit
+        Exit,
+        Changed
     };
 
     class ContextHandler

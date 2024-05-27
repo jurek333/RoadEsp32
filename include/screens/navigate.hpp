@@ -68,6 +68,9 @@ namespace RouteEsp32::screens
         RouteReader *_reader;
 
         LastValues _lasts;
+        
+        std::vector<Direction> _directions;
+        size_t _dirIndex{0};
 
         void ShowTime();
         void ShowBattery();

@@ -39,6 +39,11 @@ namespace RouteEsp32::data::images
     static image_t const round_1;
     static image_t const round_2;
     static image_t const round_3;
+    static image_t const bridge;
+    static image_t const l_join;
+    static image_t const r_join;
+    static image_t const town;
+
     class Logos
     {
     public:

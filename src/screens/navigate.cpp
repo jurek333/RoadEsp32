@@ -22,6 +22,18 @@ DoneAction Navigate::Loop()
         this->CloseFile();
         return DoneAction::Exit;
     }
+    if (_dirIndex >= _directions.size())
+    {
+        if (!this->ReadSection())
+        {
+            Windows::Alert(_lcd, _sharedBuffer, "Exit, no more file");
+            return DoneAction::Exit;
+        }
+    }
+    if (action == DoneAction::Changed)
+    {
+        this->ShowDirection(_directions[_dirIndex]);
+    }
     RtosSystem::Wait(200);
     return DoneAction::None;
 }
@@ -42,6 +54,12 @@ void Navigate::ShowBattery()
         _lasts.LastBtrLvl = lvl;
         _lcd->Rect(155, 23, 30 - _lasts.LastBtrLvl, 14, 0x0f80);
         _lcd->Rect(185 - _lasts.LastBtrLvl, 23, _lasts.LastBtrLvl, 14, 0x0000);
+
+        if (lvl < 10 && lvl >= 0)
+        {
+            char val[2]{static_cast<char>(lvl + '0'), '\0'};
+            _lcd->Print(140, 23, val, &Font16, 0xf800, 0x0000);
+        }
     }
 }
 void Navigate::ShowTime()
@@ -89,6 +107,24 @@ void Navigate::ShowDirection(Direction &dir)
         else if (dir.Exit == 4)
             _lcd->Image(x, y, &Images::round_3);
         break;
+    case DirectionType::bridge:
+        _lcd->Image(x, y, &Images::bridge);
+        break;
+    case DirectionType::left_join:
+        _lcd->Image(x, y, &Images::l_join);
+        break;
+    case DirectionType::right_join:
+        _lcd->Image(x, y, &Images::r_join);
+        break;
+    case DirectionType::town:
+        _lcd->Image(x, y, &Images::town);
+        break;
+    case DirectionType::t_join:
+        _lcd->Image(x, y, &Images::town);
+        break;
+    case DirectionType::end:
+        _lcd->Image(x, y, &Images::town);
+        break;
     default:
         _lcd->Image(x, y, &Images::crossing_3);
         break;
@@ -106,8 +142,7 @@ bool Navigate::ReadSection()
     Direction dir;
     if (!_reader->ReadNextDirection(dir))
         return false;
-
-    this->ShowDirection(dir);
+    _directions.push_back(dir);
     return true;
 }
 
@@ -122,11 +157,14 @@ DoneAction Navigate::HandleButtons()
     ESP_LOGI("nav", "Key press %d", key);
     if (key == KeysState::Keys::BtnNext)
     {
-        if (!this->ReadSection())
-        {
-            Windows::Alert(_lcd, _sharedBuffer, "Exit, no more file");
-            return DoneAction::Exit;
-        }
+        ++_dirIndex;
+        return DoneAction::Changed;
+    }
+    else if (key == KeysState::Keys::BtnPrev)
+    {
+        if (_dirIndex > 0)
+            --_dirIndex;
+        return DoneAction::Changed;
     }
     else if (key == KeysState::Keys::BothBtns)
     {
