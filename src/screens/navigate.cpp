@@ -1,13 +1,25 @@
 #include "common/system.hpp"
+#include "common/palleteColors.hpp"
 #include "screens/navigate.hpp"
 #include "string.h"
 #include "screens/windows.hpp"
 #include <math.h>
 
-using namespace RouteEsp32::screens;
-using namespace RouteEsp32::data;
-using namespace RouteEsp32::data::images;
-using namespace RouteEsp32::modules;
+using namespace RoadEsp32::Common;
+using namespace RoadEsp32::Screens;
+using namespace RoadEsp32::Data;
+using namespace RoadEsp32::Modules;
+
+void Navigate::Init()
+{
+    _lcd->Clean(0x0000);
+    _lcd->Image(150, 20, &Imgs::Icons::battery);
+    _lcd->Image(50, 20, &Imgs::Icons::satellite);
+    _lcd->Rect(55, 45, 130, 1, 0xFFFF);
+    _lcd->Rect(55, 268, 130, 1, 0xFFFF);
+    _lcd->Print(20, 270, "#", &Font16, PalleteColors::TextGreen, PalleteColors::ScreenBacground);
+    ESP_LOGI("nav", "init lcd 4 nav");
+}
 
 DoneAction Navigate::Loop()
 {
@@ -19,16 +31,22 @@ DoneAction Navigate::Loop()
     if (action == DoneAction::Exit)
     {
         ESP_LOGI("nav", "Closing file %d", _navFileHandler);
-        this->CloseFile();
         return DoneAction::Exit;
     }
     if (_dirIndex >= _directions.size())
     {
         if (!this->ReadSection())
         {
-            Windows::Alert(_lcd, _sharedBuffer, "Exit, no more file");
-            return DoneAction::Exit;
+            if (_dirIndex == 0)
+            {
+                Windows::Alert(_lcd, this->_sharedBuffer, "Empty File");
+                return DoneAction::Exit;
+            }
+            else
+                --_dirIndex;
         }
+        else
+            action = DoneAction::Changed;
     }
     if (action == DoneAction::Changed)
     {
@@ -37,28 +55,30 @@ DoneAction Navigate::Loop()
     RtosSystem::Wait(200);
     return DoneAction::None;
 }
-void Navigate::Init()
-{
-    _lcd->Clean(0x0000);
-    _lcd->Image(150, 20, &Images::Icons::battery);
-    _lcd->Image(50, 20, &Images::Icons::satellite);
-    _lcd->Rect(55, 45, 130, 1, 0xFFFF);
-    _lcd->Rect(55, 268, 130, 1, 0xFFFF);
-    ESP_LOGI("nav", "init lcd 4 nav");
-}
+
 void Navigate::ShowBattery()
 {
-    auto lvl = std::min((std::max(0, 100 - _sharedBuffer->batteryLvl)) / 3, 30);
-    if (std::abs(lvl - _lasts.LastBtrLvl) > 6)
+    auto battLvl = _sharedBuffer->batteryLvl;
+    auto lvl = std::min((std::max(0, 100 - battLvl)) / 3, 30);
+
+    ESP_LOGI("nav", "bat lvl in px %d", battLvl);
+    ESP_LOGI("nav", "lvl in px %d", lvl);
+
+    if (std::abs(lvl - _lasts.LastBtrLvl) >= 6)
     {
         _lasts.LastBtrLvl = lvl;
-        _lcd->Rect(155, 23, 30 - _lasts.LastBtrLvl, 14, 0x0f80);
-        _lcd->Rect(185 - _lasts.LastBtrLvl, 23, _lasts.LastBtrLvl, 14, 0x0000);
-
-        if (lvl < 10 && lvl >= 0)
+        if (30 - lvl > 0)
+            _lcd->Rect(155, 23, 30 - lvl, 14, 0x0f80);
+        if (lvl > 0)
+            _lcd->Rect(185 - lvl, 23, lvl, 14, 0x0000);
+        if (battLvl <= 10)
         {
-            char val[2]{static_cast<char>(lvl + '0'), '\0'};
-            _lcd->Print(140, 23, val, &Font16, 0xf800, 0x0000);
+            _lcd->Print(114, 23, static_cast<uint8_t>(battLvl), &Font16, 0xf800, 0x0000, false);
+        }
+        else
+        {
+            _lcd->Rect(114, 23, 149 - 114, 16, 0x0000);
+            //_lcd->Print(114, 23, "   ", &Font16, 0x0000, 0x0000);
         }
     }
 }
@@ -70,71 +90,92 @@ void Navigate::ShowTime()
     char txt[8]{0};
     snprintf(txt, 8, "%02d:%02d", _sharedBuffer->GpsSharedData.DateTime.hour, _sharedBuffer->GpsSharedData.DateTime.minute);
 
-    _lcd->PrintLine(90, 270, txt, &Font16, 0x0ff0, 0x0000);
+    _lcd->Print(90, 270, txt, &Font16, PalleteColors::TextGreen, PalleteColors::ScreenBacground);
     _lasts.LastMinute = _sharedBuffer->GpsSharedData.DateTime.minute;
 }
 void Navigate::ShowSatelites()
 {
-    uint16_t number = (uint8_t)_sharedBuffer->GpsSharedData.Satelites;
+    uint8_t number = (uint8_t)_sharedBuffer->GpsSharedData.Satelites;
     if (_lasts.LastSatelites == number)
         return;
 
-    char txt[6]{' '};
-    snprintf(txt, 6, "%d", number);
-    for (int off = 2; off > 0; --off)
-        if (txt[off] == '\0')
-            txt[off] = ' ';
-
-    _lcd->Print(70, 21, txt, &Font16, 0x0ff0, 0x0000);
+    _lcd->Print(70, 21, number, &Font16, PalleteColors::TextGreen, PalleteColors::ScreenBacground, true);
     _lasts.LastSatelites = number;
 }
 
 void Navigate::ShowDirection(Direction &dir)
 {
     const uint16_t x = 30, y = 80;
+
+    _lcd->Print(20 + Font16.width + 1, 270, static_cast<uint16_t>(_dirIndex), &Font16,
+                PalleteColors::TextGreen, PalleteColors::ScreenBacground, true);
+
     switch (dir.Type)
     {
     case DirectionType::crossing:
-        _lcd->Image(x, y, &Images::crossing);
+        if (dir.Dir == Directions::ahead)
+            _lcd->MonoImage(x, y, &RouteImgs::crossroads2, PalleteColors::DirectionsForeground, 4);
+        else if (dir.Dir == Directions::left)
+            _lcd->MonoImage(x, y, &RouteImgs::crossroads3, PalleteColors::DirectionsForeground, 4);
+        else if (dir.Dir == Directions::right)
+            _lcd->MonoImage(x, y, &RouteImgs::crossroads1, PalleteColors::DirectionsForeground, 4);
+        else
+            _lcd->MonoImage(x, y, &RouteImgs::unknown, PalleteColors::TextGreen, 4);
         break;
     case DirectionType::round:
         if (dir.Exit == 1)
-            _lcd->Image(x, y, &Images::round_0);
+            _lcd->MonoImage(x, y, &RouteImgs::roundabout1, PalleteColors::DirectionsForeground, 2);
         else if (dir.Exit == 2)
-            _lcd->Image(x, y, &Images::round_1);
+            _lcd->MonoImage(x, y, &RouteImgs::roundabout2, PalleteColors::DirectionsForeground, 2);
         else if (dir.Exit == 3)
-            _lcd->Image(x, y, &Images::round_2);
+            _lcd->MonoImage(x, y, &RouteImgs::roundabout3, PalleteColors::DirectionsForeground, 2);
         else if (dir.Exit == 4)
-            _lcd->Image(x, y, &Images::round_3);
+            _lcd->MonoImage(x, y, &RouteImgs::bridge, PalleteColors::DirectionsForeground, 1);
+
         break;
     case DirectionType::bridge:
-        _lcd->Image(x, y, &Images::bridge);
+        _lcd->MonoImage(x, y, &RouteImgs::bridge, PalleteColors::DirectionsForeground, 1);
         break;
     case DirectionType::left_join:
-        _lcd->Image(x, y, &Images::l_join);
+        if (dir.Dir == Directions::ahead)
+            _lcd->MonoImage(x, y, &RouteImgs::left_join_1, PalleteColors::DirectionsForeground, 4);
+        else if (dir.Dir == Directions::left)
+            _lcd->MonoImage(x, y, &RouteImgs::left_join_2, PalleteColors::DirectionsForeground, 4);
         break;
     case DirectionType::right_join:
-        _lcd->Image(x, y, &Images::r_join);
+        if (dir.Dir == Directions::ahead)
+            _lcd->MonoImage(x, y, &RouteImgs::right_join_2, PalleteColors::DirectionsForeground, 4);
+        else if (dir.Dir == Directions::right)
+            _lcd->MonoImage(x, y, &RouteImgs::right_join_1, PalleteColors::DirectionsForeground, 4);
         break;
     case DirectionType::town:
-        _lcd->Image(x, y, &Images::town);
+        _lcd->MonoImage(x, y, &RouteImgs::town, PalleteColors::DirectionsForeground, 1);
         break;
     case DirectionType::t_join:
-        _lcd->Image(x, y, &Images::town);
+        if (dir.Dir == Directions::left)
+            _lcd->MonoImage(x, y, &RouteImgs::t_join_2, PalleteColors::DirectionsForeground, 4);
+        else if (dir.Dir == Directions::right)
+            _lcd->MonoImage(x, y, &RouteImgs::t_join_1, PalleteColors::DirectionsForeground, 4);
         break;
     case DirectionType::end:
-        _lcd->Image(x, y, &Images::town);
+        _lcd->MonoImage(x, y, &RouteImgs::end, PalleteColors::DirectionsForeground, 1);
         break;
     default:
-        _lcd->Image(x, y, &Images::crossing_3);
+        _lcd->MonoImage(x, y, &RouteImgs::unknown, PalleteColors::TextGreen, 4);
         break;
     }
     if (!dir.RoadName.empty())
         _lcd->PrintLine(20, 54, dir.RoadName.c_str(),
-                        &Font24, 0x0000, 0x0fb0);
+                        &Font24, PalleteColors::RoadForeground, PalleteColors::RoadBackground);
+    else if (!dir.Name.empty())
+        _lcd->PrintLine(20, 54, dir.Name.c_str(),
+                        &Font24, PalleteColors::NameForeground, PalleteColors::NameBackground);
+    else if (!dir.DirSign.empty())
+        _lcd->PrintLine(20, 54, dir.DirSign.c_str(),
+                        &Font24, PalleteColors::RoadForeground, PalleteColors::RoadBackground);
     else
         _lcd->PrintLine(20, 54, " ",
-                        &Font24, 0x0000, 0x0000);
+                        &Font24, PalleteColors::ScreenBacground, PalleteColors::ScreenBacground);
 }
 
 bool Navigate::ReadSection()

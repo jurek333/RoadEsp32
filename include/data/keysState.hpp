@@ -2,14 +2,13 @@
 #include <cstdint>
 #include <cstddef>
 
-#define NextKeyMask 0b00000010
-#define PrevKeyMask 0b00000001
-
-namespace RouteEsp32::data
+namespace RoadEsp32::Data
 {
     struct KeysState
     {
         static constexpr uint8_t BothBtnTresholdCycles = 5;
+        static constexpr uint8_t NextKeyMask = 0b00000010;
+        static constexpr uint8_t PrevKeyMask = 0b00000001;
 
         uint8_t PressedKeys;
         uint8_t ReleasedKeys;
@@ -29,13 +28,15 @@ namespace RouteEsp32::data
         {
             ReleasedKeys |= PressedKeys & ~newState;
             PressedKeys = newState;
-            
+
             if (!LockBothPressed)
             {
-                if (3 == (3 & PressedKeys))
+                auto bothKeyMask = NextKeyMask | PrevKeyMask;
+                if (bothKeyMask == (bothKeyMask & PressedKeys))
                 {
                     ++BothBtnCount;
-                    if (BothBtnCount > BothBtnTresholdCycles){
+                    if (BothBtnCount > BothBtnTresholdCycles)
+                    {
                         LockBothPressed = true;
                     }
                 }
@@ -79,6 +80,9 @@ namespace RouteEsp32::data
             bool result = LockBothPressed;
             if (LockBothPressed)
             {
+                if (!(ReleasedKeys & (PrevKeyMask | NextKeyMask)))
+                    return false;
+
                 LockBothPressed = false;
                 BothBtnCount = 0;
                 PressedKeys &= ~(PrevKeyMask | NextKeyMask);

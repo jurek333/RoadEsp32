@@ -12,10 +12,11 @@
 #define LCD_HOST SPI2_HOST
 #define LCD_BK_LIGHT_ON_LEVEL 1
 
-namespace RouteEsp32::modules
+namespace RoadEsp32::Modules
 {
-    using namespace RouteEsp32::protocols;
-    using namespace RouteEsp32::data::images;
+    using namespace RoadEsp32::Protocols;
+    using namespace RoadEsp32::Data::Images;
+    using namespace RoadEsp32::Fonts;
 
     typedef gpio_num_t PIN;
 
@@ -47,8 +48,11 @@ namespace RouteEsp32::modules
         void Image(uint x, uint y, const image_t *img);
         LcdBox RotatedImages(const LcdPoint &position, const LcdPoint &center, double angle, const image_t *img);
         void MonoImage(uint x, uint y, const mono_image_t *img, uint16_t color, uint8_t scale = 1);
-        void PrintLine(uint16_t x, uint16_t y, const char *text, const CustFont_t *font, const uint16_t fColor, const uint16_t bColor);
-        void Print(uint16_t x, uint16_t y, const char *text, CustFont_t *font, uint16_t fColor, uint16_t bColor);
+        void PrintLine(uint16_t x, uint16_t y, const char *text, const CustFont *font, const uint16_t fColor, const uint16_t bColor);
+        void Print(uint16_t x, uint16_t y, const char *text, const CustFont *font, uint16_t fColor, uint16_t bColor);
+        void Print(uint16_t x, uint16_t y, uint8_t number, const CustFont *font, uint16_t fColor, uint16_t bColor, bool toLeft);
+        void Print(uint16_t x, uint16_t y, uint16_t number, const CustFont *font, uint16_t fColor, uint16_t bColor, bool toLeft);
+        void Print(uint16_t x, uint16_t y, float number, const CustFont *font, uint16_t fColor, uint16_t bColor);
         void Tick()
         {
             _gradientX += 7;

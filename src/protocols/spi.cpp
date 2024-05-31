@@ -1,7 +1,7 @@
 #include "protocols/spi.hpp"
 #include "driver/gpio.h"
 
-using namespace RouteEsp32::protocols;
+using namespace RoadEsp32::Protocols;
 
 Spi::Spi(spi_host_device_t host = SPI2_HOST) {
     _host = host;

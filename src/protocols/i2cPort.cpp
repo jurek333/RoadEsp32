@@ -4,7 +4,7 @@
 
 #include "protocols/i2cPort.hpp"
 
-using namespace RouteEsp32::protocols;
+using namespace RoadEsp32::Protocols;
 
 void I2CPort::Init() {    
     i2c_master_bus_config_t i2c_mst_config {

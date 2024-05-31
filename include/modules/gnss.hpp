@@ -4,10 +4,10 @@
 
 #define GNS_I2C_ADDR 0x20
 
-namespace RouteEsp32::modules
+namespace RoadEsp32::Modules
 {
-    using namespace RouteEsp32::data;
-    using namespace RouteEsp32::protocols;
+    using namespace RoadEsp32::Data;
+    using namespace RoadEsp32::Protocols;
 
     typedef enum
     {

@@ -2,7 +2,7 @@
 
 #include <inttypes.h>
 
-namespace RouteEsp32::data::images
+namespace RoadEsp32::Data::Images
 {
   struct image_row_part_t
   {
@@ -28,21 +28,33 @@ namespace RouteEsp32::data::images
     uint8_t *bytes;
   } mono_image_t;
 
-  class Images
+  class RouteImgs {
+    public:
+    static mono_image_t const bridge;
+    static mono_image_t const crossroads1;
+    static mono_image_t const crossroads2;
+    static mono_image_t const crossroads3;
+    static mono_image_t const roundabout1;
+    static mono_image_t const roundabout2;
+    static mono_image_t const roundabout3;
+    static mono_image_t const end;
+    static mono_image_t const town;
+
+    static mono_image_t const t_join_1;
+    static mono_image_t const t_join_2;
+
+    static mono_image_t const left_join_1;
+    static mono_image_t const left_join_2;
+
+    static mono_image_t const right_join_1;
+    static mono_image_t const right_join_2;
+
+    static mono_image_t const unknown;
+  };
+
+  class Imgs
   {
   public:
-    static image_t const crossing;
-    static image_t const crossing_1;
-    static image_t const crossing_2;
-    static image_t const crossing_3;
-    static image_t const round_0;
-    static image_t const round_1;
-    static image_t const round_2;
-    static image_t const round_3;
-    static image_t const bridge;
-    static image_t const l_join;
-    static image_t const r_join;
-    static image_t const town;
 
     class Logos
     {
@@ -54,7 +66,6 @@ namespace RouteEsp32::data::images
     public:
       static image_t const battery;
       static image_t const satellite;
-      static image_t const dir_arrow;
     };
   };
 }

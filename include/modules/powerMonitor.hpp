@@ -1,7 +1,7 @@
 #pragma once
 #include "esp_adc/adc_oneshot.h"
 
-namespace RouteEsp32::modules
+namespace RoadEsp32::Modules
 {
     class PowerMonitor
     {

@@ -1,9 +1,10 @@
 #pragma once
 
+#include <stdint.h>
 #include <string>
 #include <vector>
 
-namespace RouteEsp32::data::routes
+namespace RoadEsp32::Data::Routes
 {
 
     enum DirectionType

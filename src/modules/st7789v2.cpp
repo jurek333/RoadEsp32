@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <string>
+#include <bits/stdc++.h>
 
 #ifdef BUILD_ENV_ESP
 #include "freertos/FreeRTOS.h"
@@ -15,7 +17,8 @@
 
 #include "graphics.hpp"
 
-using namespace RouteEsp32::modules;
+using namespace RoadEsp32::Modules;
+using namespace RoadEsp32::Fonts;
 
 static PIN DC;
 
@@ -25,6 +28,7 @@ ST7789V2::ST7789V2(PIN cs, PIN dc, PIN rst, PIN bl, uint16_t screen_H_px, uint16
     _buffer = NULL;
     _bufferSize = _screen_W_px * PARALLEL_LINES;
     _buffer = (uint16_t *)heap_caps_malloc(_bufferSize * sizeof(uint16_t), MALLOC_CAP_DMA);
+    ESP_LOGI("LCD", "Memory for buffer allocated at: %p", _buffer);
 }
 
 ST7789V2::~ST7789V2()
@@ -209,10 +213,10 @@ LcdBox ST7789V2::RotatedImages(
 
     for (int i = 0; i < 4; ++i)
     {
-        //ESP_LOGI("glx", "corner %d (%ld,%ld)", i, corners[i].x, corners[i].y);
-        //auto p = Rotate(corners[i].Move(-center.x, -center.y), angle);
-        auto p = corners[i].Move(-center.x, -center.y);        
-        //ESP_LOGI("glx", "(%ld,%ld)", p.x, p.y);
+        // ESP_LOGI("glx", "corner %d (%ld,%ld)", i, corners[i].x, corners[i].y);
+        // auto p = Rotate(corners[i].Move(-center.x, -center.y), angle);
+        auto p = corners[i].Move(-center.x, -center.y);
+        // ESP_LOGI("glx", "(%ld,%ld)", p.x, p.y);
         box.StretchByPoint(p.Move(center.x, center.y));
     }
 
@@ -350,7 +354,8 @@ uint16_t strLineLen(const char *text)
     return len;
 }
 
-void ST7789V2::PrintLine(uint16_t x, uint16_t y, const char *text, const CustFont_t *font, const uint16_t fColor, const uint16_t bColor){
+void ST7789V2::PrintLine(uint16_t x, uint16_t y, const char *text, const CustFont *font, const uint16_t fColor, const uint16_t bColor)
+{
     auto textLen = strLineLen(text);
     auto screenWidth = textLen * font->width;
 
@@ -379,15 +384,15 @@ void ST7789V2::PrintLine(uint16_t x, uint16_t y, const char *text, const CustFon
                 uint8_t letterOffset = ix % font->width;
                 auto fontLineSizeInBytes = (uint32_t)std::ceil(font->width / 8.0);
                 auto fontOffset =
-                    (text[letterIndex] - ' ') * fontLineSizeInBytes * (uint32_t)font->height // whole letter
+                    CustFont::GetFontIndexForLetter(text[letterIndex]) * fontLineSizeInBytes * (uint32_t)font->height // whole letter
                     + fontLineSizeInBytes * (ih + cy - y)                                    // line of letter
                     + (letterOffset / 8);                                                    // byte of line data
 
                 uint8_t characterPart = font->chars[fontOffset];
                 uint8_t color = characterPart & (0x80 >> (letterOffset % 8));
-                _buffer[ih * _screen_W_px + ix+x] = !(!color) * foreground + !color * background;
+                _buffer[ih * _screen_W_px + ix + x] = !(!color) * foreground + !color * background;
             }
-            for (uint16_t ix = x+screenWidth; ix < _screen_W_px; ++ix)
+            for (uint16_t ix = x + screenWidth; ix < _screen_W_px; ++ix)
                 _buffer[ih * _screen_W_px + ix] = background;
         }
         send_block(0, cy, _screen_W_px, h, _buffer, _screen_W_px * h);
@@ -395,7 +400,47 @@ void ST7789V2::PrintLine(uint16_t x, uint16_t y, const char *text, const CustFon
     }
 }
 
-void ST7789V2::Print(uint16_t x, uint16_t y, const char *text, CustFont_t *font, uint16_t fColor, uint16_t bColor)
+void ST7789V2::Print(uint16_t x, uint16_t y, uint8_t number, const CustFont *font, uint16_t fColor, uint16_t bColor, bool toLeft)
+{
+    char txt[4]{'\0'};
+    snprintf(txt, 4, toLeft ? "%d" : "%3d", number);
+
+    for (uint8_t i = 0; toLeft && i < 3; ++i)
+    {
+        if (txt[i] == '\0')
+        {
+            txt[i] = ' ';
+            txt[i + 1] = '\0';
+        }
+    }
+
+    this->Print(x, y, txt, font, fColor, bColor);
+}
+
+void ST7789V2::Print(uint16_t x, uint16_t y, uint16_t number, const CustFont *font, uint16_t fColor, uint16_t bColor, bool toLeft)
+{
+    constexpr auto numberMaxSize = 6;
+    char txt[numberMaxSize]{'\0'};
+    snprintf(txt, numberMaxSize, toLeft ? "%d" : "%6d", number);
+    for (uint8_t i = 0; toLeft && i < numberMaxSize - 1; ++i)
+    {
+        if (txt[i] == '\0')
+        {
+            txt[i] = ' ';
+            txt[i + 1] = '\0';
+        }
+    }
+
+    this->Print(x, y, txt, font, fColor, bColor);
+}
+
+void ST7789V2::Print(uint16_t x, uint16_t y, float number, const CustFont *font, uint16_t fColor, uint16_t bColor)
+{
+
+    this->Print(x, y, std::to_string(number).c_str(), font, fColor, bColor);
+}
+
+void ST7789V2::Print(uint16_t x, uint16_t y, const char *text, const CustFont *font, uint16_t fColor, uint16_t bColor)
 {
     auto textLen = strLineLen(text);
     auto screenWidth = textLen * font->width;
@@ -422,7 +467,7 @@ void ST7789V2::Print(uint16_t x, uint16_t y, const char *text, CustFont_t *font,
                 uint8_t letterOffset = ix % font->width;
                 auto fontLineSizeInBytes = (uint32_t)std::ceil(font->width / 8.0);
                 auto fontOffset =
-                    (text[letterIndex] - ' ') * fontLineSizeInBytes * (uint32_t)font->height // whole letter
+                    CustFont::GetFontIndexForLetter(text[letterIndex]) * fontLineSizeInBytes * (uint32_t)font->height // whole letter
                     + fontLineSizeInBytes * (ih + cy - y)                                    // line of letter
                     + (letterOffset / 8);                                                    // byte of line data
 

@@ -3,7 +3,7 @@
 #include "unity.h"
 #include "data/keysState.hpp"
 
-using namespace RouteEsp32::data;
+using namespace RoadEsp32::Data;
 
 void test_prev_btn_pressed_and_released()
 {
@@ -20,9 +20,12 @@ void test_both_btns_pressed_for_5_cycles()
   keyState.UpdateState(0x01);
   for (int i = 0; i < 6; ++i)
     keyState.UpdateState(0x03);
+ 
+  auto pressed = keyState.ReadKey();
+  UNITY_TEST_ASSERT(pressed == KeysState::Keys::None, __LINE__, "None ofbuttons released, so there should be NONE");
 
   keyState.UpdateState(0x02);
-  auto pressed = keyState.ReadKey();
+  pressed = keyState.ReadKey();
   UNITY_TEST_ASSERT(pressed == KeysState::Keys::BothBtns, __LINE__, "1st Both Key should be TRUE");
 
   keyState.UpdateState(0x00);

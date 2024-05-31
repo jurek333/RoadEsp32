@@ -3,9 +3,10 @@
 #include "modules/st7789v2.hpp"
 #include "screens/contextHandler.hpp"
 
-namespace RouteEsp32::screens
+namespace RoadEsp32::Screens
 {
-    using namespace RouteEsp32::modules;
+    using namespace RoadEsp32::Modules;
+    using namespace RoadEsp32::Data::Images;
 
     class Logo : public ContextHandler
     {
@@ -19,7 +20,7 @@ namespace RouteEsp32::screens
         {
             RtosSystem::Wait(50);
             _lcd->Tick();
-            _lcd->MonoImage(50, 82, &Images::Logos::logo, RouteEsp32::modules::mapColor(0xD1332B), 14);
+            _lcd->MonoImage(50, 82, &Imgs::Logos::logo, RoadEsp32::Modules::mapColor(0xD1332B), 14);
 
             return DoneAction::None;
         }

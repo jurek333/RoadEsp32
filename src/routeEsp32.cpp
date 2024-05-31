@@ -3,9 +3,9 @@
 #include "routeEsp32.hpp"
 #include <esp_log.h>
 
-using namespace RouteEsp32;
-using namespace RouteEsp32::screens;
-using namespace RouteEsp32::modules;
+using namespace RoadEsp32;
+using namespace RoadEsp32::Screens;
+using namespace RoadEsp32::Modules;
 
 void loadMenuInTask(void *pvArgs)
 {
@@ -58,8 +58,12 @@ void RouteBook::EventLoop()
     break;
     case DoneAction::Exit:
     {
-        if (_currentRoutine->Context() == ContextHandler::ContextType::Navigation
-         || _currentRoutine->Context() == ContextHandler::ContextType::Gps)
+        if (_currentRoutine->Context() == ContextHandler::ContextType::Navigation)
+        {
+            _navigationScreen.CloseRoute();
+            SwitchScreens(&_menuScreen);
+        }
+        if (_currentRoutine->Context() == ContextHandler::ContextType::Gps)
         {
             SwitchScreens(&_menuScreen);
         }

@@ -20,7 +20,7 @@
 			{
 				"type": "right_join",
 				"roadName": "Sochaczewska",
-				"exit": 1
+				"dir": right
 			},
 			{
 				"type":"round",

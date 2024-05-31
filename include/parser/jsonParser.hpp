@@ -9,9 +9,10 @@
 #define JSONPARSER_BUFF_SIZE 512
 #endif
 
-using namespace RouteEsp32::modules;
+using namespace RoadEsp32::Modules;
+using namespace RoadEsp32::Common;
 
-namespace RouteEsp32::parser
+namespace RoadEsp32::Parser
 {
     class JsonParser
     {

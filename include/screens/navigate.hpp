@@ -9,15 +9,15 @@
 
 #include "esp_log.h"
 
-namespace RouteEsp32::screens
+namespace RoadEsp32::Screens
 {
-    using namespace RouteEsp32::data;
-    using namespace RouteEsp32::modules;
-    using namespace RouteEsp32::parser;
+    using namespace RoadEsp32::Data;
+    using namespace RoadEsp32::Modules;
+    using namespace RoadEsp32::Parser;
 
     struct LastValues {
-        uint8_t LastBtrLvl{0};
-        uint8_t LastSatelites{0};
+        uint8_t LastBtrLvl{255};
+        uint8_t LastSatelites{255};
         uint8_t LastMinute{255};
     };
 
@@ -52,12 +52,15 @@ namespace RouteEsp32::screens
             _reader = new RouteReader(_sd, _navFileHandler);
             return _reader->StartReading();
         }
-        void CloseFile()
+        void CloseRoute()
         {
             delete _reader;
             _reader = nullptr;
             _sd->CloseFile(_navFileHandler);
             FileHandlerExtnsions::ClearHandler(_navFileHandler);
+
+            _dirIndex = 0;
+            _directions.clear();
         }
 
     private:

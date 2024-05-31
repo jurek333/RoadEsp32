@@ -2,9 +2,9 @@
 #include "driver/spi_master.h"
 #include "common/SmallBuffer.hpp"
 
-namespace RouteEsp32::protocols
+namespace RoadEsp32::Protocols
 {
-    using namespace RouteEsp32::common;
+    using namespace RoadEsp32::Common;
 
     #define MAX_SPI_DEVICES_AMOUNT 8
     #define QUEUE_SIZE 7

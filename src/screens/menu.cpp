@@ -1,8 +1,10 @@
 #include "common/system.hpp"
 #include "screens/menu.hpp"
+#include "fonts/fonts.hpp"
 #include <esp_log.h>
 
-using namespace RouteEsp32::screens;
+using namespace RoadEsp32::Screens;
+using namespace RoadEsp32::Fonts;
 
 void Menu::Load()
 {
@@ -21,7 +23,7 @@ const int16_t menuHeightInLines = 9;
 const int16_t yOffset = 25;
 const int16_t xOffset = 0;
 
-const CustFont_t *MenuFont = &Font24;
+const CustFont *MenuFont = &Font24;
 
 void Menu::Init()
 {
@@ -31,7 +33,7 @@ void Menu::Init()
 DoneAction Menu::Loop()
 {
     const int16_t offsetInPxFromTop = yOffset;
-    const int16_t offsetInPxFromLeft = xOffset + 5;
+    const int16_t offsetInPxFromLeft = xOffset + 15;
     int16_t lineHeight = Font24.height + 6;
     static const char spaces[2]{' ', '\0'};
     for (size_t i = 0; i < menuHeightInLines; ++i)

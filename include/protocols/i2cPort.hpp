@@ -5,10 +5,10 @@
 
 #define MAX_I2C_DEV_AMOUNT 8
 
-namespace RouteEsp32::protocols
+namespace RoadEsp32::Protocols
 {
-    using namespace RouteEsp32::data;
-    using namespace RouteEsp32::common;
+    using namespace RoadEsp32::Data;
+    using namespace RoadEsp32::Common;
 
     typedef uint8_t i2c_device_id_t;
 
