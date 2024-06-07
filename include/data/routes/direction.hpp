@@ -39,8 +39,8 @@ namespace RoadEsp32::Data::Routes
     };
     struct GpsCoordinates
     {
-        double Lat;
-        double Lon;
+        double Lat{0.0};
+        double Lon{0.0};
     };
 
     struct Direction

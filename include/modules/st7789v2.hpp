@@ -7,6 +7,7 @@
 #include "protocols/spi.hpp"
 #include "fonts/fonts.hpp"
 #include "graphics.hpp"
+#include <math.h>
 
 #define PARALLEL_LINES 16
 #define LCD_HOST SPI2_HOST
@@ -43,22 +44,13 @@ namespace RoadEsp32::Modules
 
         void Init(Spi *);
         void Clean(uint16_t color);
-        void Rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
-        void Img(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t *img);
-        void Image(uint x, uint y, const image_t *img);
-        LcdBox RotatedImages(const LcdPoint &position, const LcdPoint &center, double angle, const image_t *img);
-        void MonoImage(uint x, uint y, const mono_image_t *img, uint16_t color, uint8_t scale = 1);
-        void PrintLine(uint16_t x, uint16_t y, const char *text, const CustFont *font, const uint16_t fColor, const uint16_t bColor);
-        void Print(uint16_t x, uint16_t y, const char *text, const CustFont *font, uint16_t fColor, uint16_t bColor);
-        void Print(uint16_t x, uint16_t y, uint8_t number, const CustFont *font, uint16_t fColor, uint16_t bColor, bool toLeft);
-        void Print(uint16_t x, uint16_t y, uint16_t number, const CustFont *font, uint16_t fColor, uint16_t bColor, bool toLeft);
-        void Print(uint16_t x, uint16_t y, float number, const CustFont *font, uint16_t fColor, uint16_t bColor);
-        void Tick()
-        {
-            _gradientX += 7;
-            _gradientX = (_gradientX >= _screen_W_px ? 0 : _gradientX);
-        }
 
+        uint16_t GetBufferSize() { return std::min(_bufferSize, (uint16_t)(_spi->MaxTransferBufferSize/sizeof(uint16_t))); }
+        //const uint16_t GetBufferSize() { return _bufferSize; }
+        auto GetBuffer() { return _buffer; }
+
+        void send_lines(uint ypos, uint16_t size);
+        void send_block(uint xpos, uint ypos, uint w, uint h, uint buffSize);
     private:
         Spi *_spi;
         device_no_t _device;
@@ -66,10 +58,6 @@ namespace RoadEsp32::Modules
         uint16_t _bufferSize;
 
         PIN _cs, _dc, _rst, _bl;
-        constexpr uint16_t packColor(const uint16_t color) noexcept
-        {
-            return (color << 8) | (color >> 8);
-        }
         uint16_t _screen_H_px, _screen_W_px;
         const lcd_init_cmd_t ST_INIT_CMDS[17] = {
             /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
@@ -110,9 +98,5 @@ namespace RoadEsp32::Modules
         void initLcd();
         void lcd_cmd(const uint8_t cmd, bool keep_cs_active);
         void lcd_data(const uint8_t *data, uint len);
-        void send_lines(uint ypos, uint16_t *linedata);
-        void send_block(uint xpos, uint ypos, uint w, uint h, uint16_t *linedata, uint buffSize);
-        uint16_t GetColor(uint16_t color, uint16_t x, uint16_t y);
-        uint16_t _gradientX{0};
     };
 }

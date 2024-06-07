@@ -1,6 +1,7 @@
 #pragma once
 
 #include <inttypes.h>
+#include <math.h>
 
 namespace RoadEsp32::Data::Images
 {
@@ -22,14 +23,63 @@ namespace RoadEsp32::Data::Images
     image_row_t *rows;
   } image_t;
 
-  typedef struct
+  enum DrawOptimizationType
+  {
+    none,
+    round,
+    frame
+  };
+
+  struct draw_optimization_t
+  {
+    DrawOptimizationType kind{DrawOptimizationType::none};
+    uint16_t outterDimmention{0}, innerDimmention{0};
+  };
+
+  struct mono_image_t
   {
     uint16_t h, w;
     uint8_t *bytes;
-  } mono_image_t;
 
-  class RouteImgs {
-    public:
+    draw_optimization_t optimization{};
+
+    bool HasColorAt(uint16_t x, uint16_t y) const
+    {
+      if (x >= w || y >= h)
+        return false;
+      auto byteInLine = (w >> 3) + ((w & 0x0007) > 0 ? 1 : 0);
+
+      auto byte = bytes[(y * byteInLine + (x >> 3))];
+      auto mask = 0x01 << (7 - (x & 0x0007));
+      return (byte & mask) != 0;
+    }
+
+    bool outOfDrawableZone(uint16_t x, uint16_t y) const
+    {
+      if (optimization.kind == DrawOptimizationType::none)
+        return false;
+      if (optimization.kind == DrawOptimizationType::round)
+      {
+        auto dx = static_cast<int>(x) - w / 2;
+        auto dy = static_cast<int>(y) - h / 2;
+        auto d = dx * dx + dy * dy;
+        return !(d > optimization.innerDimmention * optimization.innerDimmention 
+          && d < optimization.outterDimmention * optimization.outterDimmention);
+      }
+      if (optimization.kind == DrawOptimizationType::frame)
+      {
+        auto dx = std::abs(static_cast<int>(x) - w / 2);
+        auto dy = std::abs(static_cast<int>(y) - h / 2);
+        return !(dx > optimization.innerDimmention && dy>optimization.innerDimmention
+          && dx < optimization.outterDimmention && dy>optimization.outterDimmention);
+      }
+      return false;
+    }
+  };
+
+  class RouteImgs
+  {
+  public:
     static mono_image_t const bridge;
     static mono_image_t const crossroads1;
     static mono_image_t const crossroads2;
@@ -55,6 +105,8 @@ namespace RoadEsp32::Data::Images
   class Imgs
   {
   public:
+    static mono_image_t const compass_needle;
+    static mono_image_t const compass;
 
     class Logos
     {

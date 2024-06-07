@@ -60,6 +60,13 @@ void Sensors::ReadPositionInLoop()
     _buffer->GpsSharedData.Altitude = a;
     _buffer->GpsSharedData.Coordinates.UpdateLatitude(lat);
     _buffer->GpsSharedData.Coordinates.UpdateLongitude(lon);
+
+    if(!_buffer->GpsSharedData.GpsDirections.IsDestinationPresent)
+        return;
+
+    auto kmDist = _buffer->GpsSharedData.Coordinates.CalculateKilometerDistanceTo(_buffer->GpsSharedData.GpsDirections.Destination);
+    auto bearingAngle= _buffer->GpsSharedData.Coordinates.CalculateBearingAngle(_buffer->GpsSharedData.GpsDirections.Destination);
+    _buffer->GpsSharedData.GpsDirections.SetDistanceAndAngle(kmDist, bearingAngle);
 }
 
 void Sensors::ReadGpsStatusInLoop()

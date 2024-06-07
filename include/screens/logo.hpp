@@ -1,20 +1,22 @@
 #pragma once
 #include "common/system.hpp"
-#include "modules/st7789v2.hpp"
+#include "modules/lcds/lcd.hpp"
 #include "screens/contextHandler.hpp"
 
 namespace RoadEsp32::Screens
 {
     using namespace RoadEsp32::Modules;
+    using namespace RoadEsp32::Modules::Lcds;
     using namespace RoadEsp32::Data::Images;
 
     class Logo : public ContextHandler
     {
     public:
-        Logo(ST7789V2 *lcd) { _lcd = lcd; }
+        Logo(Lcd *lcd) { _lcd = lcd; }
         void Init()
         {
             _lcd->Clean(0x0000);
+            _lcd->SetCurrentEffect(_lcd->Effects.GradientShine);
         }
         DoneAction Loop()
         {
@@ -27,6 +29,6 @@ namespace RoadEsp32::Screens
         ContextHandler::ContextType Context() { return ContextHandler::ContextType::Intro; }
 
     private:
-        ST7789V2 *_lcd;
+        Lcd *_lcd;
     };
 }

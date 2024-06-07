@@ -41,7 +41,11 @@ void RouteBook::EventLoop()
     case DoneAction::Selected:
     {
         auto path = _menuScreen.GetSelectedPath();
-        if (_navigationScreen.ReadFile(path))
+        if (path == "GPS")
+        {
+            SwitchScreens(&_gpsScreen);
+        }
+        else if (_navigationScreen.ReadFile(path))
         {
             SwitchScreens(&_navigationScreen);
         }

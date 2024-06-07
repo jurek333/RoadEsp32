@@ -1,5 +1,5 @@
 #include "common/system.hpp"
-#include "common/palleteColors.hpp"
+//#include "common/palleteColors.hpp"
 #include "screens/navigate.hpp"
 #include "string.h"
 #include "screens/windows.hpp"
@@ -12,13 +12,12 @@ using namespace RoadEsp32::Modules;
 
 void Navigate::Init()
 {
-    _lcd->Clean(0x0000);
+    _lcd->Clean(PalleteColors::ScreenBackground);
     _lcd->Image(150, 20, &Imgs::Icons::battery);
     _lcd->Image(50, 20, &Imgs::Icons::satellite);
-    _lcd->Rect(55, 45, 130, 1, 0xFFFF);
-    _lcd->Rect(55, 268, 130, 1, 0xFFFF);
-    _lcd->Print(20, 270, "#", &Font16, PalleteColors::TextGreen, PalleteColors::ScreenBacground);
-    ESP_LOGI("nav", "init lcd 4 nav");
+    _lcd->Rect(55, 45, 130, 1, PalleteColors::LightBlue);
+    _lcd->Rect(55, 268, 130, 1, PalleteColors::LightBlue);
+    _lcd->Print(20, 270, "#", &Font16, PalleteColors::MainText, PalleteColors::ScreenBackground);
 }
 
 DoneAction Navigate::Loop()
@@ -50,8 +49,11 @@ DoneAction Navigate::Loop()
     }
     if (action == DoneAction::Changed)
     {
+        _sharedBuffer->GpsSharedData.GpsDirections.SetDestination(_directions[_dirIndex].Gps);
         this->ShowDirection(_directions[_dirIndex]);
     }
+    this->PrintNames(_directions[_dirIndex]);
+    this->PrintGpsDirections();
     RtosSystem::Wait(200);
     return DoneAction::None;
 }
@@ -90,25 +92,26 @@ void Navigate::ShowTime()
     char txt[8]{0};
     snprintf(txt, 8, "%02d:%02d", _sharedBuffer->GpsSharedData.DateTime.hour, _sharedBuffer->GpsSharedData.DateTime.minute);
 
-    _lcd->Print(90, 270, txt, &Font16, PalleteColors::TextGreen, PalleteColors::ScreenBacground);
+    _lcd->Print(90, 270, txt, &Font16, PalleteColors::MainText, PalleteColors::ScreenBackground);
     _lasts.LastMinute = _sharedBuffer->GpsSharedData.DateTime.minute;
 }
+
 void Navigate::ShowSatelites()
 {
     uint8_t number = (uint8_t)_sharedBuffer->GpsSharedData.Satelites;
     if (_lasts.LastSatelites == number)
         return;
 
-    _lcd->Print(70, 21, number, &Font16, PalleteColors::TextGreen, PalleteColors::ScreenBacground, true);
+    _lcd->Print(70, 21, number, &Font16, PalleteColors::MainText, PalleteColors::ScreenBackground, true);
     _lasts.LastSatelites = number;
 }
 
 void Navigate::ShowDirection(Direction &dir)
 {
-    const uint16_t x = 30, y = 80;
+    const uint16_t x = 40, y = 100;
 
     _lcd->Print(20 + Font16.width + 1, 270, static_cast<uint16_t>(_dirIndex), &Font16,
-                PalleteColors::TextGreen, PalleteColors::ScreenBacground, true);
+                PalleteColors::MainText, PalleteColors::ScreenBackground, true);
 
     switch (dir.Type)
     {
@@ -120,7 +123,7 @@ void Navigate::ShowDirection(Direction &dir)
         else if (dir.Dir == Directions::right)
             _lcd->MonoImage(x, y, &RouteImgs::crossroads1, PalleteColors::DirectionsForeground, 4);
         else
-            _lcd->MonoImage(x, y, &RouteImgs::unknown, PalleteColors::TextGreen, 4);
+            _lcd->MonoImage(x, y, &RouteImgs::unknown, PalleteColors::MainText, 4);
         break;
     case DirectionType::round:
         if (dir.Exit == 1)
@@ -161,21 +164,9 @@ void Navigate::ShowDirection(Direction &dir)
         _lcd->MonoImage(x, y, &RouteImgs::end, PalleteColors::DirectionsForeground, 1);
         break;
     default:
-        _lcd->MonoImage(x, y, &RouteImgs::unknown, PalleteColors::TextGreen, 4);
+        _lcd->MonoImage(x, y, &RouteImgs::unknown, PalleteColors::MainText, 4);
         break;
     }
-    if (!dir.RoadName.empty())
-        _lcd->PrintLine(20, 54, dir.RoadName.c_str(),
-                        &Font24, PalleteColors::RoadForeground, PalleteColors::RoadBackground);
-    else if (!dir.Name.empty())
-        _lcd->PrintLine(20, 54, dir.Name.c_str(),
-                        &Font24, PalleteColors::NameForeground, PalleteColors::NameBackground);
-    else if (!dir.DirSign.empty())
-        _lcd->PrintLine(20, 54, dir.DirSign.c_str(),
-                        &Font24, PalleteColors::RoadForeground, PalleteColors::RoadBackground);
-    else
-        _lcd->PrintLine(20, 54, " ",
-                        &Font24, PalleteColors::ScreenBacground, PalleteColors::ScreenBacground);
 }
 
 bool Navigate::ReadSection()

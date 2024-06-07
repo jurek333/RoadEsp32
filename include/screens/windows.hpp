@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include "common/system.hpp"
-#include "modules/st7789v2.hpp"
+#include "modules/lcds/lcd.hpp"
 #include "data/sharedData.hpp"
 
 namespace RoadEsp32::Screens
@@ -23,7 +23,7 @@ namespace RoadEsp32::Screens
         }
 
     public:
-        static void Alert(ST7789V2 *lcd, SharedData *kbrd, const std::string &msg)
+        static void Alert(Lcd *lcd, SharedData *kbrd, const std::string &msg)
         {
             const uint16_t w = 160, h = 140;
             const CustFont *font = &Font16;

@@ -5,17 +5,13 @@
 #include "screens/logo.hpp"
 #include "screens/menu.hpp"
 #include "screens/navigate.hpp"
+#include "modules/lcds/lcd.hpp"
 
 #define PIN_NUM_MISO 8
 #define PIN_NUM_MOSI 9
 #define PIN_NUM_CLK 7
 
 #define LCD_HOST SPI2_HOST
-
-#define PIN_NUM_CS GPIO_NUM_44
-#define PIN_NUM_DC GPIO_NUM_2
-#define PIN_NUM_RST GPIO_NUM_3
-#define PIN_NUM_BCKL GPIO_NUM_4
 
 #define SCR_H 320
 #define SCR_W 240
@@ -25,6 +21,7 @@ namespace RoadEsp32
     using namespace RoadEsp32::Data;
     using namespace RoadEsp32::Protocols;
     using namespace RoadEsp32::Modules;
+    using namespace RoadEsp32::Modules::Lcds;
     using namespace RoadEsp32::Screens;
 
     class RouteBook
@@ -48,8 +45,7 @@ namespace RoadEsp32
         ContextHandler *_currentRoutine;
 
         Spi spi{SPI2_HOST};
-        ST7789V2 lcd{PIN_NUM_CS, PIN_NUM_DC,
-                     PIN_NUM_RST, PIN_NUM_BCKL, SCR_H, SCR_W};
+        Lcd lcd{SCR_W, SCR_H};
         SdCard sdCard{GPIO_NUM_43};
         Logo _logoScreen{&lcd};
         Menu _menuScreen{&sdCard, &lcd};
