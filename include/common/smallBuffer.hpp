@@ -33,10 +33,12 @@ namespace RoadEsp32::Common
         }
         T Get(H hdr)
         {
-            return _buffor[hdr];
+            return hdr < L ? _buffor[hdr] : T{};
         }
         void Release(H hdr)
         {
+            if (hdr >= L)
+                return;
             _buffor[hdr] = 0;
             _occupied[hdr] = false;
         }

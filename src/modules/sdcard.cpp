@@ -86,12 +86,16 @@ SdCardFileHandler SdCard::OpenFile(const std::string &path, const FileOpenMode m
 
 void SdCard::CloseFile(const SdCardFileHandler &fileHandler)
 {
+    if (FileHandlerExtnsions::IsEmpty(fileHandler))
+        return;
     fclose(_files.Get(fileHandler));
     _files.Release(fileHandler);
 }
 
 bool SdCard::Read(const SdCardFileHandler &fileHandler, char *buff, const uint16_t buffSize)
 {
+    if (FileHandlerExtnsions::IsEmpty(fileHandler))
+        return false;
     //ESP_LOGE(TAG, "Read file %d", fileHandler);
     if (NULL == fgets(buff, buffSize, _files.Get(fileHandler)))
     {

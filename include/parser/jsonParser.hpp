@@ -49,7 +49,10 @@ namespace RoadEsp32::Parser
             ParserStateMachine::StateOperation stateStatus;
 
             while (_stateMachine.State() != type)
-                ReadNextChar(stateStatus);
+            {
+                if (ReadNextChar(stateStatus) == '\0')
+                    return val;
+            }
 
             if(type == JsonParserStates::ValueNumber) {
                 c[0] = _buff[_parseIndex-1];
@@ -107,11 +110,13 @@ namespace RoadEsp32::Parser
             ParserStateMachine::StateOperation operation;
 
             _stateMachine.SetBookmark();
-            ReadNextChar(operation);
+            if (ReadNextChar(operation) == '\0')
+                return;
 
             while (operation != ParserStateMachine::StateOperation::PopedWithBookmark)
             {
-                ReadNextChar(operation);
+                if (ReadNextChar(operation) == '\0')
+                    return;
             }
         }
 
