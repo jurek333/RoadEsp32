@@ -14,7 +14,7 @@ namespace RoadEsp32::Fonts
             if (0 == (letter & 0x80))
                 return letter - ' ';
 
-            switch (letter)
+            switch (static_cast<unsigned char>(letter))
             {
             case 0x9C:
                 return '~' - ' ' + 10;

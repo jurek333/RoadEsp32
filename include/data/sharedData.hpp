@@ -24,5 +24,25 @@ namespace RoadEsp32::Data
             
             return key;
         }
+
+        // Scoped lock over GpsSharedData. Skips the caller's write on timeout (100 ms).
+        class GpsLock
+        {
+        public:
+            explicit GpsLock(SharedData *data) : _data(data), _locked(data->Semaphore != NULL && xSemaphoreTake(data->Semaphore, 100) == pdTRUE) {}
+            ~GpsLock()
+            {
+                if (_locked)
+                    xSemaphoreGive(_data->Semaphore);
+            }
+            GpsLock(const GpsLock &) = delete;
+            GpsLock &operator=(const GpsLock &) = delete;
+            explicit operator bool() const { return _locked; }
+
+        private:
+            SharedData *_data;
+            bool _locked;
+        };
+
     };
 }

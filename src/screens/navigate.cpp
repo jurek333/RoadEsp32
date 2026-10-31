@@ -49,7 +49,11 @@ DoneAction Navigate::Loop()
     }
     if (action == DoneAction::Changed)
     {
-        _sharedBuffer->GpsSharedData.GpsDirections.SetDestination(_directions[_dirIndex].Gps);
+        {
+            SharedData::GpsLock lock(_sharedBuffer);
+            if (lock)
+                _sharedBuffer->GpsSharedData.GpsDirections.SetDestination(_directions[_dirIndex].Gps);
+        }
         this->ShowDirection(_directions[_dirIndex]);
     }
     this->PrintNames(_directions[_dirIndex]);
@@ -66,22 +70,27 @@ void Navigate::ShowBattery()
     ESP_LOGI("nav", "bat lvl in px %d", battLvl);
     ESP_LOGI("nav", "lvl in px %d", lvl);
 
-    if (std::abs(lvl - _lasts.LastBtrLvl) >= 6)
+    bool barChanged = std::abs(lvl - _lasts.LastBtrLvl) >= 6;
+    bool textChanged = battLvl != _lasts.LastBattPct && (battLvl <= 10 || _lasts.LastBattPct <= 10);
+    if (!barChanged && !textChanged)
+        return;
+
+    _lasts.LastBtrLvl = lvl;
+    _lasts.LastBattPct = battLvl;
+    if (barChanged)
     {
-        _lasts.LastBtrLvl = lvl;
         if (30 - lvl > 0)
             _lcd->Rect(155, 23, 30 - lvl, 14, 0x0f80);
         if (lvl > 0)
             _lcd->Rect(185 - lvl, 23, lvl, 14, 0x0000);
-        if (battLvl <= 10)
-        {
-            _lcd->Print(114, 23, static_cast<uint8_t>(battLvl), &Font16, 0xf800, 0x0000, false);
-        }
-        else
-        {
-            _lcd->Rect(114, 23, 149 - 114, 16, 0x0000);
-            //_lcd->Print(114, 23, "   ", &Font16, 0x0000, 0x0000);
-        }
+    }
+    if (battLvl <= 10)
+    {
+        _lcd->Print(114, 23, static_cast<uint8_t>(battLvl), &Font16, 0xf800, 0x0000, false);
+    }
+    else if (textChanged)
+    {
+        _lcd->Rect(114, 23, 149 - 114, 16, 0x0000);
     }
 }
 void Navigate::ShowTime()

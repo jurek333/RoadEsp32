@@ -70,8 +70,8 @@ namespace RoadEsp32::Data::Images
       {
         auto dx = std::abs(static_cast<int>(x) - w / 2);
         auto dy = std::abs(static_cast<int>(y) - h / 2);
-        return !(dx > optimization.innerDimmention && dy>optimization.innerDimmention
-          && dx < optimization.outterDimmention && dy>optimization.outterDimmention);
+        return !(dx > optimization.innerDimmention && dy > optimization.innerDimmention
+          && dx < optimization.outterDimmention && dy < optimization.outterDimmention);
       }
       return false;
     }

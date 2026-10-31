@@ -20,7 +20,8 @@ namespace RoadEsp32::Screens
 
     struct LastValues
     {
-        uint8_t LastBtrLvl{255};
+    uint8_t LastBtrLvl{255};
+    int LastBattPct{-1};
         uint8_t LastSatelites{255};
         uint8_t LastMinute{255};
     };
