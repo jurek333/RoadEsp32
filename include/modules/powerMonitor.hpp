@@ -14,6 +14,6 @@ namespace RoadEsp32::Modules
 
     private:
         adc_channel_t _adcChannel;
-        adc_oneshot_unit_handle_t _adcHandle;
+        adc_oneshot_unit_handle_t _adcHandle = nullptr;
     };
 }

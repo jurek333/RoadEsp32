@@ -14,7 +14,7 @@ void I2CPort::Init() {
         .clk_source = I2C_CLK_SRC_XTAL,
         .glitch_ignore_cnt = 7,
         .intr_priority = 0,
-        //.trans_queue_depth = 6,
+        .trans_queue_depth = 0,
         .flags {
             .enable_internal_pullup = true
         }

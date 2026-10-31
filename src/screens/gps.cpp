@@ -29,7 +29,13 @@ DoneAction Gps::HandleButton()
 
 void Gps::ShowSatelites()
 {
-    uint8_t number = (uint8_t)_sharedBuffer->GpsSharedData.Satelites;
+    uint8_t number;
+    {
+        SharedData::GpsLock lock(_sharedBuffer);
+        if (!lock)
+            return;
+        number = (uint8_t)_sharedBuffer->GpsSharedData.Satelites;
+    }
     if (_showingValues.SatNo == number)
         return;
 
@@ -39,21 +45,37 @@ void Gps::ShowSatelites()
 
 void Gps::ShowTime()
 {
-    if (_showingValues.Minute == _sharedBuffer->GpsSharedData.DateTime.minute)
+    uint8_t hour, minute;
+    {
+        SharedData::GpsLock lock(_sharedBuffer);
+        if (!lock)
+            return;
+        hour = _sharedBuffer->GpsSharedData.DateTime.hour;
+        minute = _sharedBuffer->GpsSharedData.DateTime.minute;
+    }
+    if (_showingValues.Minute == minute)
         return;
 
     char txt[8]{0};
-    snprintf(txt, 8, "%02d:%02d", _sharedBuffer->GpsSharedData.DateTime.hour, _sharedBuffer->GpsSharedData.DateTime.minute);
+    snprintf(txt, 8, "%02d:%02d", hour, minute);
 
     _lcd->Print(90, 270, txt, &Font16, PalleteColors::MainText, PalleteColors::ScreenBackground);
-    _showingValues.Minute = _sharedBuffer->GpsSharedData.DateTime.minute;
+    _showingValues.Minute = minute;
 }
 void Gps::ShowNav()
 {
-    if (!AreEqual(_showingValues.Speed, _sharedBuffer->GpsSharedData.Speed))
+    double speed, course;
+    {
+        SharedData::GpsLock lock(_sharedBuffer);
+        if (!lock)
+            return;
+        speed = _sharedBuffer->GpsSharedData.Speed;
+        course = _sharedBuffer->GpsSharedData.Course;
+    }
+    if (!AreEqual(_showingValues.Speed, speed))
     {
         char txt[13]{'\0'};
-        _showingValues.Speed = _sharedBuffer->GpsSharedData.Speed;
+        _showingValues.Speed = speed;
         snprintf(txt, 12, "%5.1f km/h", _showingValues.Speed);
         _lcd->PrintCenteredLine(220, txt, &Font35, PalleteColors::MainText, PalleteColors::ScreenBackground);
     }
@@ -64,9 +86,9 @@ void Gps::ShowNav()
     //     snprintf(txt, 10, "%6.1f m", _showingValues.Altitude);
     //     _lcd->PrintCenteredLine(253, txt, &Font16, PalleteColors::MainText, PalleteColors::ScreenBackground);
     // }
-    if (!AreEqual(_showingValues.Course, _sharedBuffer->GpsSharedData.Course))
+    if (!AreEqual(_showingValues.Course, course))
     {
-        _showingValues.Course = _sharedBuffer->GpsSharedData.Course;
+        _showingValues.Course = course;
         _lcd->RotatedImage(40, 60, &Imgs::compass, _showingValues.Course, 80, 80, PalleteColors::LightGold, PalleteColors::ScreenBackground);
         _lcd->MonoImage(109, 84, &Imgs::compass_needle, PalleteColors::LightBlue, 1);
     }

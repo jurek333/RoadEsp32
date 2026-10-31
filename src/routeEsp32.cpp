@@ -29,8 +29,7 @@ void RouteBook::Setup(SharedData *sharedBuffer)
     sdCard.Init();
 
     _currentRoutine->Init();
-    TaskHandle_t menu;
-    xTaskCreatePinnedToCore(loadMenuInTask, "LoadMenu", 4096, &this->_menuScreen, 1, &menu, 1);
+    xTaskCreatePinnedToCore(loadMenuInTask, "LoadMenu", 4096, &this->_menuScreen, 1, nullptr, 1);
 }
 
 void RouteBook::EventLoop()
