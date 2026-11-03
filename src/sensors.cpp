@@ -1,5 +1,6 @@
 #include "common/system.hpp"
 #include "sensors.hpp"
+#include <esp_log.h>
 #include <math.h>
 
 using namespace RoadEsp32;
@@ -22,7 +23,8 @@ Sensors::~Sensors()
 void Sensors::Init()
 {
     _i2c.Init();
-    _kbrd.Init(&_i2c);
+    if (_kbrd.Init(&_i2c) != ESP_OK)
+        ESP_LOGE("sensors", "Keyboard init failed; key input disabled");
     _gps.Init(&_i2c);
     _power.Init();
 }
@@ -30,23 +32,36 @@ void Sensors::Init()
 void Sensors::ReadTimeInLoop()
 {
     auto time = _gps.GetUTC();
-    auto oldHour = _buffer->GpsSharedData.DateTime.hour;
-
-    _buffer->GpsSharedData.DateTime.hour = time.hour;
-    _buffer->GpsSharedData.DateTime.minute = time.minute;
-    _buffer->GpsSharedData.DateTime.second = time.second;
-    if (oldHour <= time.hour)
+    bool rolledOver;
+    {
+        SharedData::GpsLock lock(_buffer);
+        if (!lock)
+            return;
+        auto &dt = _buffer->GpsSharedData.DateTime;
+        rolledOver = dt.hour > time.hour;
+        dt.hour = time.hour;
+        dt.minute = time.minute;
+        dt.second = time.second;
+    }
+    if (!rolledOver)
         return;
     auto day = _gps.GetDate();
-    _buffer->GpsSharedData.DateTime.year = day.year;
-    _buffer->GpsSharedData.DateTime.month = day.month;
-    _buffer->GpsSharedData.DateTime.date = day.date;
+    SharedData::GpsLock lock(_buffer);
+    if (!lock)
+        return;
+    auto &dt = _buffer->GpsSharedData.DateTime;
+    dt.year = day.year;
+    dt.month = day.month;
+    dt.date = day.date;
 }
 
 void Sensors::ReadMovementInLoop()
 {
     auto s = _gps.getSpeed();
     auto dir = _gps.GetCourse();
+    SharedData::GpsLock lock(_buffer);
+    if (!lock)
+        return;
     _buffer->GpsSharedData.Speed = s;
     _buffer->GpsSharedData.Course = dir;
 }
@@ -57,21 +72,28 @@ void Sensors::ReadPositionInLoop()
     auto lat = _gps.GetLat();
     auto a = _gps.GetAlt();
 
-    _buffer->GpsSharedData.Altitude = a;
-    _buffer->GpsSharedData.Coordinates.UpdateLatitude(lat);
-    _buffer->GpsSharedData.Coordinates.UpdateLongitude(lon);
+    SharedData::GpsLock lock(_buffer);
+    if (!lock)
+        return;
+    auto &gps = _buffer->GpsSharedData;
+    gps.Altitude = a;
+    gps.Coordinates.UpdateLatitude(lat);
+    gps.Coordinates.UpdateLongitude(lon);
 
-    if(!_buffer->GpsSharedData.GpsDirections.IsDestinationPresent)
+    if (!gps.GpsDirections.IsDestinationPresent)
         return;
 
-    auto kmDist = _buffer->GpsSharedData.Coordinates.CalculateKilometerDistanceTo(_buffer->GpsSharedData.GpsDirections.Destination);
-    auto bearingAngle= _buffer->GpsSharedData.Coordinates.CalculateBearingAngle(_buffer->GpsSharedData.GpsDirections.Destination);
-    _buffer->GpsSharedData.GpsDirections.SetDistanceAndAngle(kmDist, bearingAngle);
+    auto kmDist = gps.Coordinates.CalculateKilometerDistanceTo(gps.GpsDirections.Destination);
+    auto bearingAngle = gps.Coordinates.CalculateBearingAngle(gps.GpsDirections.Destination);
+    gps.GpsDirections.SetDistanceAndAngle(kmDist, bearingAngle);
 }
 
 void Sensors::ReadGpsStatusInLoop()
 {
     auto n = _gps.GetAmountOfSatelites();
+    SharedData::GpsLock lock(_buffer);
+    if (!lock)
+        return;
     _buffer->GpsSharedData.Satelites = n;
 }
 
@@ -80,6 +102,7 @@ void Sensors::ReadPowerLvl()
     constexpr int max = 2350;
     constexpr int min = 1750;
     auto val = _power.ReadRaw();
+    // Single int32 store: atomic on ESP32, so no lock needed.
     _buffer->batteryLvl = std::max(0, ((val-min)*100)/(max-min));
 }
 
