@@ -40,10 +40,14 @@ namespace RoadEsp32::Modules
         bool Read(const SdCardFileHandler &fileHandler, char *buff, const uint16_t buffSize);
         void Write(const SdCardFileHandler &fileHandler, const std::string &value)
         {
+            if (FileHandlerExtnsions::IsEmpty(fileHandler))
+                return;
             fputs(value.c_str(), _files.Get(fileHandler));
         }
         void Reset(const SdCardFileHandler &fileHandler)
         {
+            if (FileHandlerExtnsions::IsEmpty(fileHandler))
+                return;
             rewind(_files.Get(fileHandler));
         }
 

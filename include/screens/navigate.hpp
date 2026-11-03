@@ -54,7 +54,10 @@ namespace RoadEsp32::Screens
             }
             ESP_LOGI("nav", "Got filehandler %d", _navFileHandler);
             _reader = new RouteReader(_sd, _navFileHandler);
-            return _reader->StartReading();
+            if (_reader->StartReading())
+                return true;
+            CloseRoute();
+            return false;
         }
         void CloseRoute()
         {

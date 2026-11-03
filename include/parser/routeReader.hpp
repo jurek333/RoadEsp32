@@ -162,8 +162,7 @@ namespace RoadEsp32::Parser
             if (!parser->GoToNext(JsonParserStates::Object))
                 return false;
 
-            auto state = parser->CurrentElement();
-            for (int readCount = 0; state != JsonParserStates::Array && readCount < 9; ++readCount)
+            for (int readCount = 0; parser->CurrentElement() != JsonParserStates::Array && readCount < 9; ++readCount)
             {
                 auto property = parser->ReadPropertyName();
                 auto fun = PropertiesOfDirection.find(property);
@@ -179,7 +178,6 @@ namespace RoadEsp32::Parser
                 }
                 if (parser->StillInProperty())
                     parser->JumpOverCurrentState();
-                state = parser->CurrentElement();
             }
             return true;
         }

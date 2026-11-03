@@ -47,7 +47,8 @@ i2c_device_id_t I2CPort::AddDevice(uint16_t addr) {
         .scl_speed_hz = 100000,
     };
     i2c_master_dev_handle_t hdl;
-    ESP_ERROR_CHECK(i2c_master_bus_add_device(_busHandle, &dev_cfg, &hdl));
+    if (i2c_master_bus_add_device(_busHandle, &dev_cfg, &hdl) != ESP_OK)
+        return 0xFF;
     return _devices.Add(hdl);
 }
 
@@ -56,17 +57,20 @@ bool I2CPort::ProbeDevice(uint16_t addr) {
     return ret == ESP_OK;
 }
 
-void I2CPort::ReadDeviceByMask(i2c_device_id_t deviceId, uint8_t mask, uint8_t *buffer, size_t buffSize) {
-    esp_err_t ret = i2c_master_transmit_receive(_devices.Get(deviceId), &mask, 1, buffer, buffSize, 100);
-    ESP_ERROR_CHECK(ret);
+esp_err_t I2CPort::ReadDeviceByMask(i2c_device_id_t deviceId, uint8_t mask, uint8_t *buffer, size_t buffSize) {
+    if (_devices.IsTheEnd(deviceId))
+        return ESP_ERR_INVALID_ARG;
+    return i2c_master_transmit_receive(_devices.Get(deviceId), &mask, 1, buffer, buffSize, 100);
 }
 
-void I2CPort::ReadDevice(i2c_device_id_t deviceId, uint8_t *buffer, size_t buffSize) {
-    esp_err_t ret = i2c_master_receive(_devices.Get(deviceId), buffer, buffSize, 100);
-    ESP_ERROR_CHECK(ret);
+esp_err_t I2CPort::ReadDevice(i2c_device_id_t deviceId, uint8_t *buffer, size_t buffSize) {
+    if (_devices.IsTheEnd(deviceId))
+        return ESP_ERR_INVALID_ARG;
+    return i2c_master_receive(_devices.Get(deviceId), buffer, buffSize, 100);
 }
 
-void I2CPort::WriteDevice(i2c_device_id_t deviceId, uint8_t data) {
-    esp_err_t ret = i2c_master_transmit(_devices.Get(deviceId), &data, 1, 100);
-    ESP_ERROR_CHECK(ret);
+esp_err_t I2CPort::WriteDevice(i2c_device_id_t deviceId, uint8_t data) {
+    if (_devices.IsTheEnd(deviceId))
+        return ESP_ERR_INVALID_ARG;
+    return i2c_master_transmit(_devices.Get(deviceId), &data, 1, 100);
 }
