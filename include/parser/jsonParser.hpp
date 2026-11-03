@@ -63,8 +63,15 @@ namespace RoadEsp32::Parser
                 c[0] = ReadNextChar(stateStatus);
                 if (c[0] == '\0')
                     return val;
-                if (stateStatus == ParserStateMachine::StateOperation::Unchanged)
-                    val.append(c);
+                if (stateStatus != ParserStateMachine::StateOperation::Unchanged)
+                    continue;
+                if (c[0] == '\\')
+                {
+                    if (!AppendEscapedChar(val))
+                        return val;
+                    continue;
+                }
+                val.append(c);
             }
             return val;
         }
@@ -146,6 +153,79 @@ namespace RoadEsp32::Parser
         char _buff[JSONPARSER_BUFF_SIZE + 1];
         size_t _buffSize;
 
+        // Decodes the character(s) following a backslash. Returns false on EOF.
+        bool AppendEscapedChar(std::string &val)
+        {
+            ParserStateMachine::StateOperation status;
+            char e = ReadNextChar(status);
+            switch (e)
+            {
+            case '\0':
+                return false;
+            case 'n':
+                val += '\n';
+                return true;
+            case 't':
+                val += '\t';
+                return true;
+            case 'r':
+                val += '\r';
+                return true;
+            case 'b':
+                val += '\b';
+                return true;
+            case 'f':
+                val += '\f';
+                return true;
+            case 'u':
+                return AppendUnicodeEscape(val);
+            default:
+                // covers \" \\ \/
+                val += e;
+                return true;
+            }
+        }
+        // Appends the UTF-8 encoding of a \uXXXX BMP code point. Surrogate pairs are not combined.
+        bool AppendUnicodeEscape(std::string &val)
+        {
+            ParserStateMachine::StateOperation status;
+            uint32_t cp = 0;
+            for (int i = 0; i < 4; ++i)
+            {
+                char h = ReadNextChar(status);
+                if (h == '\0')
+                    return false;
+                uint32_t d;
+                if (h >= '0' && h <= '9')
+                    d = h - '0';
+                else if (h >= 'a' && h <= 'f')
+                    d = h - 'a' + 10;
+                else if (h >= 'A' && h <= 'F')
+                    d = h - 'A' + 10;
+                else
+                {
+                    val += '?';
+                    return true;
+                }
+                cp = (cp << 4) | d;
+            }
+            if (cp < 0x80)
+            {
+                val += static_cast<char>(cp);
+            }
+            else if (cp < 0x800)
+            {
+                val += static_cast<char>(0xC0 | (cp >> 6));
+                val += static_cast<char>(0x80 | (cp & 0x3F));
+            }
+            else
+            {
+                val += static_cast<char>(0xE0 | (cp >> 12));
+                val += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+                val += static_cast<char>(0x80 | (cp & 0x3F));
+            }
+            return true;
+        }
         void Reset()
         {
             _sd->Reset(_file);

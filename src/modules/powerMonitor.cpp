@@ -25,7 +25,10 @@ void PowerMonitor::Init()
 
 void PowerMonitor::Dispose()
 {
+    if (_adcHandle == nullptr)
+        return;
     ESP_ERROR_CHECK(adc_oneshot_del_unit(_adcHandle));
+    _adcHandle = nullptr;
 }
 
 int PowerMonitor::ReadRaw()

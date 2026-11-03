@@ -89,24 +89,30 @@ namespace RoadEsp32::Screens
         void ShowDirection(Direction &dir);
         void PrintGpsDirections()
         {
-            if (_sharedBuffer->GpsSharedData.GpsDirections.IsDestinationPresent)
+            bool present;
+            bool calcDone;
+            double distanceKm;
+            {
+                SharedData::GpsLock lock(_sharedBuffer);
+                if (!lock)
+                    return;
+                auto &gps = _sharedBuffer->GpsSharedData.GpsDirections;
+                present = gps.IsDestinationPresent;
+                calcDone = gps.AreCalculationsDone;
+                distanceKm = gps.DistanceInKm;
+            }
+            if (present)
             {
                 _lcd->Rect(40, 25, 3, 3, PalleteColors::RoadBackground);
             } else {
                 _lcd->Rect(40, 25, 3, 3, PalleteColors::ScreenBackground);
             }
 
-            if (!_sharedBuffer->GpsSharedData.GpsDirections.IsDestinationPresent || !_sharedBuffer->GpsSharedData.GpsDirections.AreCalculationsDone)
+            if (!present || !calcDone)
             {
                 return;
             }
-            auto gps = &_sharedBuffer->GpsSharedData.GpsDirections;
-            //_lcd->Print(5, 90, (float)gps->Destination.Lat, &Font16, PalleteColors::MainText, PalleteColors::ScreenBackground);
-            //_lcd->Print(125, 90, (float)gps->Destination.Lon, &Font16, PalleteColors::MainText, PalleteColors::ScreenBackground);
-
-            _lcd->Print(5, 92, static_cast<float>(std::round(gps->DistanceInKm)), &Font16, PalleteColors::MainText, PalleteColors::ScreenBackground);
-            //_lcd->Print(5, 138, (float)(gps->DirectionAngle - _sharedBuffer->GpsSharedData.Course), &Font16, PalleteColors::MainText, PalleteColors::ScreenBackground);
-            //_lcd->Print(5, 154, (float)(gps->DirectionAngleDegrees), &Font16, PalleteColors::MainText, PalleteColors::ScreenBackground);
+            _lcd->Print(5, 92, static_cast<float>(std::round(distanceKm)), &Font16, PalleteColors::MainText, PalleteColors::ScreenBackground);
         }
         void PrintNames(Direction &dir)
         {

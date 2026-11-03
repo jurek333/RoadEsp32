@@ -95,19 +95,33 @@ void Navigate::ShowBattery()
 }
 void Navigate::ShowTime()
 {
-    if (_lasts.LastMinute == _sharedBuffer->GpsSharedData.DateTime.minute)
+    uint8_t hour, minute;
+    {
+        SharedData::GpsLock lock(_sharedBuffer);
+        if (!lock)
+            return;
+        hour = _sharedBuffer->GpsSharedData.DateTime.hour;
+        minute = _sharedBuffer->GpsSharedData.DateTime.minute;
+    }
+    if (_lasts.LastMinute == minute)
         return;
 
     char txt[8]{0};
-    snprintf(txt, 8, "%02d:%02d", _sharedBuffer->GpsSharedData.DateTime.hour, _sharedBuffer->GpsSharedData.DateTime.minute);
+    snprintf(txt, 8, "%02d:%02d", hour, minute);
 
     _lcd->Print(90, 270, txt, &Font16, PalleteColors::MainText, PalleteColors::ScreenBackground);
-    _lasts.LastMinute = _sharedBuffer->GpsSharedData.DateTime.minute;
+    _lasts.LastMinute = minute;
 }
 
 void Navigate::ShowSatelites()
 {
-    uint8_t number = (uint8_t)_sharedBuffer->GpsSharedData.Satelites;
+    uint8_t number;
+    {
+        SharedData::GpsLock lock(_sharedBuffer);
+        if (!lock)
+            return;
+        number = (uint8_t)_sharedBuffer->GpsSharedData.Satelites;
+    }
     if (_lasts.LastSatelites == number)
         return;
 

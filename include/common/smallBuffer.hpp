@@ -3,12 +3,14 @@
 #include <stddef.h>
 #include <concepts>
 #include <vector>
+#include <limits>
 
 namespace RoadEsp32::Common
 {
     template <typename T, typename H, size_t L = 8>
     class SmallBuffer
     {
+        static_assert(L < std::numeric_limits<H>::max(), "L must fit in H with room for the 0xFF sentinel and the loop end");
         T _buffor[L];
         bool _occupied[L];
 
